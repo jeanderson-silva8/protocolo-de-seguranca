@@ -76,17 +76,27 @@ Esses relatórios mostram o método em ação: o que foi confirmado no código, 
 
 ## 🎯 Como usar
 
+### 🤖 Caminho mais rápido — usando LLM agente (Claude, etc.)
+
+Use o [`PROMPT_AUDITORIA.md`](PROMPT_AUDITORIA.md): template pronto com 16 instruções, 5 regras inegociáveis e placeholders. Copia, troca os 6 `<<placeholders>>` (nome do projeto, pasta, stack, etc.), cola no chat. O agente segue as fases sozinho — leitura dos arquivos do framework, auditoria, classificação dos achados em bug/ADR/N/A, escrita do relatório no formato dos exemplos, promoção de achados ao checklist se for classe nova.
+
+### 👤 Auditando manualmente (sem LLM)
+
+Leia o [`WORKFLOW.md`](WORKFLOW.md) — descreve as **13 fases do método** com regras de coerência. Resumo:
+
 1. **Para auditar um projeto seu:**
-   - Comece pelo `AUDIT_CHECKLIST.md`, da 🔴 Bloqueadores para baixo.
-   - Para cada pergunta, verifique no código (não na memória) — anote `arquivo.js:linha` em cada ✅.
-   - Rode as seções aplicáveis do `CONTEXT_ADDONS.md` para o seu contexto.
+   - Comece pelo [`AUDIT_CHECKLIST.md`](AUDIT_CHECKLIST.md), da 🔴 Bloqueadores para baixo.
+   - Para cada pergunta, verifique no código (não na memória) — anote `arquivo.js:linha` em cada ✅. **Disciplina-chave.**
+   - Identifique contextos em [`context-addons/00_INDICE.md`](context-addons/00_INDICE.md) (matriz "stack → adendo aplicável") e rode só os aplicáveis.
+   - Classifique cada problema em: 🔴 bug real / 📝 decisão consciente (vira ADR) / 🚫 N/A por escopo.
    - Documente o resultado num relatório no mesmo formato dos exemplos.
+   - Quando o autor corrigir os bugs, faça **auditoria v2 comparativa** (padrão FlowSnyker v2 / Lumina v2).
 
 2. **Para usar como referência em code review:**
-   - Os itens funcionam como categorias de revisão. "Esse PR cobre o item 9D?" é mais útil que "esse PR é seguro?".
+   - Os itens funcionam como categorias de revisão. "Esse PR cobre o item 35?" é mais útil que "esse PR é seguro?".
 
 3. **Para evoluir os checklists:**
-   - Toda vez que encontrar um bug que o checklist não pegou, adicione uma pergunta nova. É assim que essa lista chegou onde está.
+   - Toda vez que encontrar um bug que o checklist não pegou, adicione uma pergunta nova (com origem rastreável). É assim que essa lista chegou onde está — ver [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 

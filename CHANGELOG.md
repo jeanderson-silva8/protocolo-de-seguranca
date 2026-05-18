@@ -9,6 +9,17 @@
 
 ---
 
+## [1.4.0] — 2026-05-18
+
+### Adicionado
+- `PROMPT_AUDITORIA.md` — template pronto pra colar em LLM agente quando for auditar projeto novo. 16 instruções ordenadas + 5 regras inegociáveis + placeholders. Garante extração ~95% do método sem precisar lembrar de cada disciplina.
+- `WORKFLOW.md` reescrito com **13 fases explícitas** derivadas das lições acumuladas (vs. versão anterior de 6 passos). Adiciona Fase 0 (preparação + perguntas ao autor), Fase 2 (classificação 3-categorias bug/ADR/N/A), Fase 5 (promoção de achados), seção dedicada à v2 comparativa, tabela "checklist sozinho vs método completo".
+
+### Origem
+- Pergunta direta: "se eu seguir o workflow original de 6 passos, extraio 100%?". Resposta honesta: ~70-80%. Faltavam as disciplinas que vieram das lições reais (Fase 0 do Lumina, Fase 2 do BrieflyAI #17, Fase v2 do Lumina v2).
+
+---
+
 ## [1.3.0] — 2026-05-18
 
 ### Adicionado

@@ -2,15 +2,120 @@
 
 > **Checklist Universal de Auditoria de Projetos**
 > Aplicável a qualquer projeto backend/fullstack profissional.
-> Para contextos específicos (WebSocket, upload, pagamento, multi-tenant, IA), consulte também o `CONTEXT_ADDONS.md`.
+> Para contextos específicos (WebSocket, upload, pagamento, multi-tenant, IA, GraphQL, etc.), consulte os adendos em [`context-addons/`](context-addons/).
 
 ---
 
 ## 📖 Como usar
 
-Percorra cada pergunta na ordem. Para cada uma, escolha **opção 1** (problema existe — anote para resolver) ou **opção 2** (está OK — siga em frente).
+Percorra cada pergunta **na ordem**. Para cada uma, escolha **opção 1** (problema existe — anote para resolver) ou **opção 2** (está OK — siga em frente).
 
-Ao final, você terá uma lista priorizada de correções. Comece sempre pelos itens da seção **🔴 BLOQUEADORES**, depois **🟠 ESSENCIAIS**, depois **🟡 QUALIDADE**, e por fim **🟢 DIFERENCIAÇÃO**.
+Ao final, você terá uma lista priorizada de correções. Comece sempre pelos itens 🔴 BLOQUEADORES, depois 🟠 ESSENCIAIS, depois 🟡 QUALIDADE, e por fim 🟢 DIFERENCIAÇÃO. A seção 🎨 FRONTEND tem itens transversais — rodar quando o projeto tem frontend próprio.
+
+> 💡 **Disciplina-chave:** para cada item ✅, anote `arquivo.ext:linha` que prova a mitigação. Sem âncora no código, o ✅ é só intenção. Essa regra evita a classe de bug "claimed → não entregue" identificada na auditoria do BrieflyAI.
+
+---
+
+## 🗂️ Índice navegável
+
+### 🔴 BLOQUEADORES (1-17) — sem isso, é vulnerável
+
+| # | Pergunta |
+|---|----------|
+| [1](#1-autenticação-está-implementada-em-todas-as-rotas-que-tocam-dados-privados) | Auth em todas as rotas privadas |
+| [2](#2-existe-verificação-de-autorização-não-só-autenticação-em-toda-operação-que-toca-recurso-pertencente-a-alguém) | Autorização em toda operação |
+| [3](#3-ids-e-referências-a-recursos-vêm-da-sessão-token-não-do-payload-do-cliente-quando-deveriam) | IDs sensíveis vêm da sessão (não do payload) |
+| [4](#4-em-handlers-assíncronos-sockets-queues-callbacks-jobs-a-identidade-do-ator-vem-da-camada-autenticada-handshake-jwt-header-e-nunca-é-re-aceita-do-payload-do-cliente-em-handlers-subsequentes) | Identidade em handlers async (socket/queue/job) |
+| [5](#5-toda-entrada-de-cliente-é-validada-com-biblioteca-zod-joi-yup-pydantic-antes-de-chegar-no-controller) | Validação Zod/Joi/Pydantic em todos os inputs |
+| [6](#6-variáveis-de-ambiente-críticas-são-validadas-no-boot-fail-fast) | Envs validadas no boot (fail-fast) |
+| [7](#7-dependências-críticas-de-runtime-banco-cache-broker-kms-também-causam-fail-fast-no-boot-em-produção-ou-só-envs) | Fail-fast também para dependências de runtime |
+| [8](#8-o-fail-fast-configurado-no-código-da-aplicação-é-preservado-em-todas-as-camadas-de-orquestração-docker-compose-helm-terraform-kustomize-ou-alguma-reintroduz-um-default-inseguro-que-silenciosamente-neutraliza-o-fail-fast) | Fail-fast preservado em camadas de orquestração |
+| [9](#9-senhas-são-armazenadas-com-algoritmo-lento-e-adequado-argon2id-bcrypt-cost--10-scrypt) | Hash de senha adequado (Argon2id/bcrypt) |
+| [10](#10-jwt-está-configurado-com-algoritmo-seguro-expiração-curta-refresh-token-e-estratégia-de-revogação) | JWT com algoritmo seguro + refresh + revogação |
+| [11](#11-comparações-de-valores-secretos-tokens-hashes-hmac-api-keys-usam-função-tempo-constante-cryptotimingsafeequal-ou-equivalente) | Comparação tempo-constante para tokens/HMAC |
+| [12](#12-existe-proteção-contra-brute-force-em-endpoints-de-autenticação-rate-limit--account-lockout) | Brute force protection em auth |
+| [13](#13-segredos-api-keys-tokens-senhas-de-banco-estão-fora-do-código-versionado) | Segredos fora do código versionado |
+| [14](#14-queries-ao-banco-usam-parâmetros-não-concatenação-de-string) | Queries parametrizadas (anti-injection) |
+| [15](#15-requisições-http-feitas-pelo-servidor-a-partir-de-input-do-usuário-são-protegidas-contra-ssrf) | Proteção contra SSRF |
+| [16](#16-não-há-desserialização-insegura-nem-renderização-de-templates-com-input-do-usuário-ssti) | Sem desserialização insegura nem SSTI |
+| [17](#17-cookies-de-sessãorefresh-têm-httponly-secure-samesite-configurados) | Cookies httpOnly/secure/sameSite |
+
+### 🟠 ESSENCIAIS (18-32) — sem isso, não é portfólio sênior
+
+| # | Pergunta |
+|---|----------|
+| 18 | Testes para caminhos críticos (auth, authz, validação) |
+| 19 | Testes adversariais para cada ameaça do THREAT_MODEL |
+| 20 | CI/CD com checks automáticos por PR |
+| 21 | Error handler centralizado |
+| 22 | Controllers usam `throw` (exercitam o middleware global) |
+| 23 | Operações sensíveis sem race conditions / TOCTOU |
+| 24 | Logging estruturado (JSON), padronizado |
+| 25 | Logs limpos de PII/segredos |
+| 26 | Documentação de API (OpenAPI ou API.md) |
+| 27 | THREAT_MODEL.md honesto |
+| 28 | Operações de cota usam mecanismo atômico (não count→if→write) |
+| 29 | SECURITY.md presente |
+| 30 | README honesto (não promete o que não entrega) |
+| 31 | Headers de segurança (Helmet/equivalente) |
+| 32 | CSP estrita (sem `'unsafe-inline'` em `script-src`) |
+
+### 🟡 QUALIDADE (33-43) — visível para quem audita
+
+| # | Pergunta |
+|---|----------|
+| 33 | IDs com formato estrito (regex/UUID) |
+| 34 | Paginação em listagens |
+| 35 | Rate limit POR USUÁRIO (não só por IP) |
+| 36 | IP confiável atrás de proxy/CDN (não-fakeável) |
+| 37 | Política de senha forte (mínimo, HIBP) |
+| 38 | Health `live` + `ready` separados |
+| 39 | Sem queries N+1 nas listagens |
+| 40 | Erros sem vazar stack/internals em prod |
+| 41 | CORS com allowlist (não `*`) |
+| 42 | Proteção CSRF para endpoints com cookie |
+| 43 | Dependências atualizadas + audit (Dependabot) |
+
+### 🟢 DIFERENCIAÇÃO (44-51) — separa sênior bom de sênior excelente
+
+| # | Pergunta |
+|---|----------|
+| 44 | Correlation ID propagado (HTTP, logs, jobs) |
+| 45 | Métricas/telemetria expostas (Prometheus/OTel) |
+| 46 | Soft delete em operações destrutivas |
+| 47 | Audit log de ações sensíveis |
+| 48 | Plano de backup + DR testado |
+| 49 | Política de retenção (LGPD/GDPR) |
+| 50 | Dockerfile multi-stage |
+| 51 | ADRs documentando decisões |
+
+### 🎨 FRONTEND (52-56) — específico de cliente
+
+| # | Pergunta |
+|---|----------|
+| 52 | Onde o access token é armazenado |
+| 53 | Guard de rota valida o token (decode + exp), não só `if (token)` |
+| 54 | Conteúdo do usuário sanitizado antes de renderizar HTML |
+| 55 | CSP configurada também no servidor do frontend (Vercel/Netlify) |
+| 56 | Erros do backend tratados sem expor detalhes |
+
+---
+
+## 🔄 Nota de migração — numeração
+
+> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. A partir desta data, **a numeração foi compactada para sequencial 1-56** para melhor legibilidade.
+>
+> **Relatórios de auditoria publicados ANTES de 2026-05-18 usam a nomenclatura antiga.** Mapa de equivalência abreviado:
+>
+> | Antigo | Novo | | Antigo | Novo | | Antigo | Novo |
+> |--------|------|---|--------|------|---|--------|------|
+> | 3B | 4 | | 11B | 19 | | 23B | 36 |
+> | 5B | 7 | | 13B | 22 | | 39B | 53 |
+> | 5C | 8 | | 13C | 23 | | 20B | 32 |
+> | 6B | 10 | | 17B | 28 | | | |
+> | 6C | 11 | | | | | | |
+>
+> Os relatórios antigos (BrieflyAI 2026-05-16, FlowSnyker v2 2026-05-16, Lumina v1 2026-05-17, Lumina v2 2026-05-18) **não foram reescritos** — preservam o histórico real do método. Quando ler "item 5C" num relatório antigo, consulte este mapa.
 
 ---
 
@@ -57,7 +162,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 3B. Em handlers assíncronos (sockets, queues, callbacks, jobs), a identidade do ator vem da camada autenticada (handshake, JWT, header) e NUNCA é re-aceita do payload do cliente em handlers subsequentes?
+### 4. Em handlers assíncronos (sockets, queues, callbacks, jobs), a identidade do ator vem da camada autenticada (handshake, JWT, header) e NUNCA é re-aceita do payload do cliente em handlers subsequentes?
 
 > *Pergunta-teste: "Se o cliente emite um evento de socket com um campo `userId` ou `user._id` no payload, o servidor usa esse valor ou usa o valor que foi guardado no handshake autenticado?"*
 >
@@ -74,7 +179,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 4. Toda entrada de cliente é validada com biblioteca (Zod, Joi, Yup, Pydantic) ANTES de chegar no controller?
+### 5. Toda entrada de cliente é validada com biblioteca (Zod, Joi, Yup, Pydantic) ANTES de chegar no controller?
 
 > **Opção 1 — Se não, há entradas sem validação:**
 > - Listar endpoints sem schema de validação
@@ -87,7 +192,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 5. Variáveis de ambiente críticas são validadas no BOOT (fail-fast)?
+### 6. Variáveis de ambiente críticas são validadas no BOOT (fail-fast)?
 
 > *Pergunta-teste: "Se eu deletar `JWT_SECRET` do `.env` e iniciar o servidor, ele aborta com erro claro ou inicia silenciosamente?"*
 >
@@ -100,15 +205,15 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 >
 > **Opção 2 — Se aborta com erro claro:** ✅ Excelente
 >
-> 🔗 *Relacionado: item 8 (segredos fora do código versionado). Este item garante que o segredo EXISTE no boot; o item 8 garante que ele não está no repositório. Os dois trabalham juntos.*
+> 🔗 *Relacionado: item 13 (segredos fora do código versionado). Este item garante que o segredo EXISTE no boot; o item 13 garante que ele não está no repositório. Os dois trabalham juntos.*
 
 ---
 
-### 5B. Dependências críticas de runtime (banco, cache, broker, KMS) também causam fail-fast no boot em produção, ou só envs?
+### 7. Dependências críticas de runtime (banco, cache, broker, KMS) também causam fail-fast no boot em produção, ou só envs?
 
 > *Pergunta-teste: "Se o banco estiver offline no momento do deploy, o servidor sobe e responde 200 em `/health/live`, mascarando o problema até alguém tentar usar a API?"*
 >
-> *Fail-fast de envs (item 5) é metade do trabalho. Sem cobrir dependências de runtime, o app sobe "verde" com banco offline e o problema só aparece quando o primeiro request quebra — frequentemente longe do horário do deploy.*
+> *Fail-fast de envs (item 6) é metade do trabalho. Sem cobrir dependências de runtime, o app sobe "verde" com banco offline e o problema só aparece quando o primeiro request quebra — frequentemente longe do horário do deploy.*
 >
 > **Opção 1 — Se o servidor sobe sem dependência crítica em produção:**
 > - Em produção (`NODE_ENV === 'production'`): falhar conexão a dependência crítica = `process.exit(1)` no boot
@@ -121,7 +226,26 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 6. Senhas são armazenadas com algoritmo lento e adequado (Argon2id, bcrypt cost ≥ 10, scrypt)?
+### 8. O fail-fast configurado no código da aplicação é preservado em TODAS as camadas de orquestração (docker-compose, helm, terraform, kustomize), ou alguma reintroduz um default inseguro que silenciosamente neutraliza o fail-fast?
+
+> *Pergunta-teste: "Meu `settings.py` levanta erro se `SECRET_KEY` não existir, mas meu `docker-compose.yml` tem `SECRET_KEY=${SECRET_KEY:-default-inseguro}` — esse fallback é acionado em produção, e o fail-fast do código continua valendo?"*
+>
+> *Esse é um bug sutil: o fail-fast do app está correto e foi testado isoladamente, mas a camada de orquestração injeta um default que faz o app NUNCA receber `None`. Resultado: o fail-fast nunca dispara, e a aplicação sobe em prod com `SECRET_KEY=django-dev-key-change-me-in-production` ou `ALLOWED_HOSTS=*`.*
+>
+> **Opção 1 — Se há defaults inseguros em camadas de orquestração:**
+> - **CRÍTICO** — anula a defesa do item 6 sem dar nenhum sinal de alerta
+> - Auditar todos os arquivos de orquestração: `docker-compose.yml`, `docker-compose.prod.yml`, charts Helm, manifests Kustomize, módulos Terraform
+> - Procurar por padrões `${VAR:-default}`, `default = "..."`, `value: "fallback"` em variáveis sensíveis
+> - **Remover o fallback** — deixar a env var resolver pra string vazia (ou exigir explicitamente). O app falha cedo e claro, em vez de subir com config insegura.
+> - Para defaults aceitáveis em DEV (ex: `DEBUG=True`), separar em arquivo dedicado (`docker-compose.dev.yml`) e nunca herdar em prod
+> - Adicionar teste de integração: subir o stack com env vars **ausentes** e verificar que o container falha no boot
+> - 🔗 *Relacionado: item 6 (fail-fast no app). 8 é a camada de orquestração; 6 é a camada de aplicação. Ambos precisam estar corretos para que a defesa real exista.*
+>
+> **Opção 2 — Se camadas de orquestração preservam o fail-fast:** ✅ Excelente
+
+---
+
+### 9. Senhas são armazenadas com algoritmo lento e adequado (Argon2id, bcrypt cost ≥ 10, scrypt)?
 
 > **Opção 1 — Se usa MD5, SHA-256, SHA-1, ou senha em claro:**
 > - **CRÍTICO — trocar imediatamente**
@@ -133,7 +257,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 6B. JWT está configurado com algoritmo seguro, expiração curta, refresh token e estratégia de revogação?
+### 10. JWT está configurado com algoritmo seguro, expiração curta, refresh token e estratégia de revogação?
 
 > *JWT mal configurado é uma das fontes mais comuns de compromisso de auth em apps modernos.*
 >
@@ -156,7 +280,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 6C. Comparações de valores secretos (tokens, hashes, HMAC, API keys) usam função tempo-constante (`crypto.timingSafeEqual` ou equivalente)?
+### 11. Comparações de valores secretos (tokens, hashes, HMAC, API keys) usam função tempo-constante (`crypto.timingSafeEqual` ou equivalente)?
 
 > *Comparações com `===`, `==`, ou `!==` vazam informação por timing — o operador retorna `false` no primeiro byte diferente, então um atacante medindo latência pode descobrir o token byte a byte.*
 >
@@ -191,7 +315,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 7. Existe proteção contra brute force em endpoints de autenticação (rate limit + account lockout)?
+### 12. Existe proteção contra brute force em endpoints de autenticação (rate limit + account lockout)?
 
 > **Opção 1 — Se não:**
 > - Adicionar rate limit específico em `/login`, `/register`, `/forgot-password`, `/reset-password`
@@ -203,7 +327,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 8. Segredos (API keys, tokens, senhas de banco) estão FORA do código versionado?
+### 13. Segredos (API keys, tokens, senhas de banco) estão FORA do código versionado?
 
 > **Opção 1 — Se sim, há segredos no código:**
 > - **CRÍTICO — qualquer segredo já commitado está comprometido para sempre**
@@ -215,11 +339,11 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 >
 > **Opção 2 — Se não, tudo via env/cofre de segredos:** ✅ Excelente
 >
-> 🔗 *Relacionado: item 5 (validação de envs no boot). Aqui garantimos que o segredo está fora do código; lá garantimos que ele existe quando a aplicação sobe.*
+> 🔗 *Relacionado: item 6 (validação de envs no boot). Aqui garantimos que o segredo está fora do código; lá garantimos que ele existe quando a aplicação sobe.*
 
 ---
 
-### 9. Queries ao banco usam parâmetros (não concatenação de string)?
+### 14. Queries ao banco usam parâmetros (não concatenação de string)?
 
 > *Vale para SQL, NoSQL, comandos shell, paths.*
 >
@@ -233,7 +357,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 9B. Requisições HTTP feitas pelo servidor a partir de input do usuário são protegidas contra SSRF?
+### 15. Requisições HTTP feitas pelo servidor a partir de input do usuário são protegidas contra SSRF?
 
 > *Aplica-se a: webhooks configurados pelo usuário, "fetch URL preview", import de arquivo via URL, OAuth callbacks, qualquer feature em que o backend faz `fetch(userInput)`.*
 >
@@ -262,7 +386,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 9C. Não há desserialização insegura nem renderização de templates com input do usuário (SSTI)?
+### 16. Não há desserialização insegura nem renderização de templates com input do usuário (SSTI)?
 
 > *Categorias diferentes, mas mesmo padrão: input do usuário sendo interpretado como código/estrutura confiável.*
 >
@@ -285,7 +409,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 10. Cookies de sessão/refresh têm `httpOnly`, `secure`, `sameSite` configurados?
+### 17. Cookies de sessão/refresh têm `httpOnly`, `secure`, `sameSite` configurados?
 
 > **Opção 1 — Se algum está faltando:**
 > - `httpOnly: true` — previne acesso via JavaScript (mitiga XSS)
@@ -300,7 +424,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🟠 ESSENCIAIS — sem isso, não é portfólio sênior
 
-### 11. Existem testes automatizados para os caminhos críticos (auth, autorização, validação)?
+### 18. Existem testes automatizados para os caminhos críticos (auth, autorização, validação)?
 
 > *Não precisa de 100% de cobertura. Precisa de testes que provem que as proteções funcionam.*
 >
@@ -318,9 +442,9 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 11B. Existem testes específicos para os cenários de exploração ADVERSARIAL identificados na modelagem de ameaças?
+### 19. Existem testes específicos para os cenários de exploração ADVERSARIAL identificados na modelagem de ameaças?
 
-> *Diferença sutil em relação ao item 11: o 11 garante que existam testes negativos (token inválido, autorização negada). Este item vai além — para cada ameaça documentada no `THREAT_MODEL.md`, existe pelo menos um teste automatizado que prova que a mitigação funciona contra o cenário de ataque específico.*
+> *Diferença sutil em relação ao item 18: o 18 garante que existam testes negativos (token inválido, autorização negada). Este item vai além — para cada ameaça documentada no `THREAT_MODEL.md`, existe pelo menos um teste automatizado que prova que a mitigação funciona contra o cenário de ataque específico.*
 >
 > *Pergunta-teste: "Para cada linha do THREAT_MODEL com status ✅ (mitigado), existe um teste que dispara o ataque e verifica que ele é bloqueado?"*
 >
@@ -342,7 +466,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 12. Existe CI/CD com checks automáticos a cada PR?
+### 20. Existe CI/CD com checks automáticos a cada PR?
 
 > **Opção 1 — Se não:**
 > - Criar `.github/workflows/ci.yml`
@@ -355,7 +479,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 13. Tratamento de erro é centralizado (middleware global) em vez de try/catch repetido em cada controller?
+### 21. Tratamento de erro é centralizado (middleware global) em vez de try/catch repetido em cada controller?
 
 > **Opção 1 — Se cada controller tem try/catch genérico:**
 > - Criar classes de erro: `NotFoundError`, `ForbiddenError`, `ValidationError`, `UnauthorizedError`
@@ -367,9 +491,9 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 13B. Os controllers usam `throw` (não `res.status().json()`) para erros operacionais, exercitando o middleware global de erro?
+### 22. Os controllers usam `throw` (não `res.status().json()`) para erros operacionais, exercitando o middleware global de erro?
 
-> *Pergunta-teste: "Se eu remover o middleware global de erro, os endpoints param de retornar 4xx corretos?" — se a resposta for "não, eles continuam funcionando", o middleware está sendo bypassed pelos controllers e o item 13 só existe no papel.*
+> *Pergunta-teste: "Se eu remover o middleware global de erro, os endpoints param de retornar 4xx corretos?" — se a resposta for "não, eles continuam funcionando", o middleware está sendo bypassed pelos controllers e o item 21 só existe no papel.*
 >
 > **Opção 1 — Se controllers ainda retornam erros com `res.status().json()`:**
 > - Refatorar para `throw new ForbiddenError(...)`, `throw new NotFoundError(...)`, etc.
@@ -382,7 +506,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 13C. Operações sensíveis estão protegidas contra race conditions / TOCTOU em lógica de negócio?
+### 23. Operações sensíveis estão protegidas contra race conditions / TOCTOU em lógica de negócio?
 
 > *Padrão clássico: "validar saldo → debitar saldo" em dois passos. Dois requests simultâneos passam pela validação antes de qualquer um decrementar → ambos passam, atacante gasta R$ 100 quando só tinha R$ 60. Mesma classe de bug: usar cupom duas vezes simultaneamente, resgatar prêmio limitado em paralelo, exceder quota fazendo N requests ao mesmo tempo, votar duas vezes.*
 >
@@ -403,7 +527,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 14. Logging é estruturado (JSON) e padronizado em 100% do código?
+### 24. Logging é estruturado (JSON) e padronizado em 100% do código?
 
 > *Pergunta-teste: "Há `console.log` ou `console.error` espalhados pelo código?"*
 >
@@ -417,7 +541,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 15. Logs estão LIMPOS de dados sensíveis (senhas, tokens, PII, números de cartão)?
+### 25. Logs estão LIMPOS de dados sensíveis (senhas, tokens, PII, números de cartão)?
 
 > **Opção 1 — Se logs contêm PII ou segredos:**
 > - **CRÍTICO se em produção — logs com PII são vetor de vazamento**
@@ -430,7 +554,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 16. Existe documentação de API (Swagger/OpenAPI ou `API.md` completo)?
+### 26. Existe documentação de API (Swagger/OpenAPI ou `API.md` completo)?
 
 > **Opção 1 — Se não há docs ou só README genérico:**
 > - Gerar OpenAPI a partir do código (zod-to-openapi, tsoa) — preferencial
@@ -441,7 +565,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 17. Existe documento de modelagem de ameaças (`THREAT_MODEL.md`) no repositório?
+### 27. Existe documento de modelagem de ameaças (`THREAT_MODEL.md`) no repositório?
 
 > *Não precisa ser longo. Precisa existir e ser honesto.*
 >
@@ -457,7 +581,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 17B. Operações com cota/limite usam mecanismo atômico (`findOneAndUpdate` com filtro, transaction, ou unique constraint) em vez do padrão `count → if → write`?
+### 28. Operações com cota/limite usam mecanismo atômico (`findOneAndUpdate` com filtro, transaction, ou unique constraint) em vez do padrão `count → if → write`?
 
 > *O padrão `count → if → create` é a face mais comum de race condition em apps SaaS. Sempre que houver "verificar limite + executar ação", existe janela de race que rate limiter por IP NÃO fecha — é race no banco, não no front.*
 >
@@ -471,13 +595,13 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - **Unique constraint estratégico** quando aplicável: `UNIQUE(userId, date, slot)` para slots agendados, `UNIQUE(userId, couponId)` para uso único de cupom — o banco recusa a duplicata independente da lógica de aplicação
 > - **Transaction com lock** (último recurso por reduzir throughput): `BEGIN; SELECT FOR UPDATE; ...; COMMIT;` ou Mongo transactions
 > - **Testar com concorrência real**: 50 requests paralelos contra o endpoint — se passa, há race; teste sequencial NÃO pega
-> - 🔗 *Relacionado: item 13C é a regra geral de race conditions; este item é a aplicação cirúrgica em cotas/limites, padrão tão comum que merece checagem dedicada.*
+> - 🔗 *Relacionado: item 23 é a regra geral de race conditions; este item é a aplicação cirúrgica em cotas/limites, padrão tão comum que merece checagem dedicada.*
 >
 > **Opção 2 — Todas as operações de cota são atômicas:** ✅ Excelente
 
 ---
 
-### 18. Existe `SECURITY.md` no repositório?
+### 29. Existe `SECURITY.md` no repositório?
 
 > *Padrão GitHub — aparece automaticamente na aba "Security".*
 >
@@ -492,7 +616,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 19. README é honesto sobre o que está e o que não está implementado?
+### 30. README é honesto sobre o que está e o que não está implementado?
 
 > *Pergunta-teste: "O README promete coisas que o código não entrega?"*
 >
@@ -506,7 +630,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 20. Headers de segurança HTTP estão configurados (Helmet ou equivalente)?
+### 31. Headers de segurança HTTP estão configurados (Helmet ou equivalente)?
 
 > *Teste em https://securityheaders.com*
 >
@@ -522,9 +646,30 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
+### 32. A CSP em produção é estrita (sem `'unsafe-inline'` ou `'unsafe-eval'` em `script-src`), ou foi relaxada para fazer o framework funcionar?
+
+> *`'unsafe-inline'` em `script-src` anula a principal proteção XSS do CSP. Frameworks modernos (Vite, Next.js, Nuxt) suportam nonces ou hashes — relaxar pra `'unsafe-inline'` é atalho que vira teatro de segurança.*
+>
+> *Pergunta-teste: "Se um atacante conseguir injetar `<script>alert(1)</script>` em qualquer parte do DOM, o navegador executa? Se sim, minha CSP de `script-src` não está protegendo de nada."*
+>
+> **Opção 1 — Se `script-src` tem `'unsafe-inline'` ou `'unsafe-eval'`:**
+> - Verificar se realmente precisa — a maioria dos casos é resolvível com nonces (Vite tem plugin, Next.js suporta nativo via middleware) ou hashes SHA-256 listados na CSP
+> - Para **CSS** (`style-src 'unsafe-inline'`), trade-off é mais aceitável: atacante via XSS conseguiria estilizar (defacement), não executar código. Comum em React + Tailwind/CSS-in-JS.
+> - Para **script**, nunca é aceitável em produção sem mitigação adicional (Trusted Types, isolamento de origem, sandboxed iframes)
+> - Se for inevitável (mock, demo, dependência legada), **documentar em ADR** com:
+>   - Por que o framework exige
+>   - Quais defesas em profundidade compensam (`frame-ancestors`, `object-src 'none'`, `base-uri`, `form-action`, Permissions-Policy)
+>   - Quando expira (gatilho objetivo)
+> - Validar nota em `securityheaders.com` — `'unsafe-inline'` derruba pra B no mínimo
+> - Ferramentas: `vite-plugin-csp-guard` (Vite), `@next/csp` (Next.js), middleware no edge do Vercel/Cloudflare que injeta nonce
+>
+> **Opção 2 — Se CSP em produção não tem `'unsafe-*'` em `script-src` (ou tem com mitigação documentada):** ✅ Excelente
+
+---
+
 ## 🟡 QUALIDADE — visível para quem audita
 
-### 21. IDs nas validações têm formato estrito (regex/UUID)?
+### 33. IDs nas validações têm formato estrito (regex/UUID)?
 
 > *`z.string().min(1)` aceita qualquer string e pode mascarar erros.*
 >
@@ -538,7 +683,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 22. Existe paginação em todas as listagens que podem crescer?
+### 34. Existe paginação em todas as listagens que podem crescer?
 
 > **Opção 1 — Se há endpoints `GET /resource` retornando array completo:**
 > - Implementar paginação por cursor (preferencial) ou offset
@@ -550,7 +695,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 23. Endpoints sensíveis têm rate limiting POR USUÁRIO (não só por IP)?
+### 35. Endpoints sensíveis têm rate limiting POR USUÁRIO (não só por IP)?
 
 > *Rate limit por IP falha atrás de NAT corporativo (um IP = mil usuários).*
 >
@@ -563,7 +708,29 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 24. Política de senha é forte (mínimo 8, idealmente verificada contra senhas vazadas)?
+### 36. Quando a aplicação está atrás de proxy/load balancer/CDN, o IP do cliente usado para rate limit, audit log e bloqueios é confiável (não-fakeável por header de origem)?
+
+> *Pergunta-teste: "Eu mando `curl -H 'X-Forwarded-For: 1.2.3.4' https://meusite/login` várias vezes — o rate limit conta cada request como vindo de IP diferente?" Se sim, o rate limit é teatro: atacante drible em 1 linha de bash.*
+>
+> *Esse é o bug mais comum em apps que migram de "sem proxy" para "com proxy" sem reauditar a função que extrai IP. O padrão `request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0]` aparece em metade dos middlewares de rate limit copiados de Stack Overflow — e é quase sempre vulnerável.*
+>
+> **Opção 1 — Se o código lê `X-Forwarded-For` cru sem saber quantos proxies confiáveis existem:**
+> - **Atacante drible o rate limit em 1 linha de curl**
+> - Correção depende do setup:
+>   - **Caddy/Nginx confiável injetando `X-Real-IP`**: ler diretamente `X-Real-IP` (proxy sobrescreve, cliente não consegue forjar). Configurar no Caddyfile: `header_up X-Real-IP {remote_host}`.
+>   - **Múltiplos proxies em cadeia** (Cloudflare → ALB → app): contar do final do `X-Forwarded-For` para trás N posições (N = número de proxies confiáveis). NUNCA confiar no primeiro IP da lista.
+>   - **Cloudflare na frente**: usar `CF-Connecting-IP` (Cloudflare nunca o injeta se vier do cliente).
+> - Em Django: configurar `SECURE_PROXY_SSL_HEADER` apenas se confiar no header; validar `USE_X_FORWARDED_HOST = False` se não usa.
+> - Em Express: `app.set('trust proxy', N)` com N correto — não `true` (confia em qualquer proxy) nem `false` (ignora completamente).
+> - Em FastAPI/Starlette: usar `ProxyHeadersMiddleware` configurado com `trusted_hosts`.
+> - **Teste de validação obrigatório**: mandar header forjado e verificar que ele é IGNORADO (não que ele seja aceito).
+> - 🔗 *Relacionado: item 35 (rate limit por usuário). Sem 36, qualquer rate limit por IP é placebo atrás de proxy.*
+>
+> **Opção 2 — IP confiável vem do header certo, ou de `REMOTE_ADDR` direto sem proxy:** ✅ Excelente
+
+---
+
+### 37. Política de senha é forte (mínimo 8, idealmente verificada contra senhas vazadas)?
 
 > **Opção 1 — Se senha mínima é < 8 ou sem checagem de vazamento:**
 > - Aumentar mínimo para 10 caracteres (NIST recomenda 8, idealmente mais)
@@ -574,7 +741,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 25. Existem health checks separando "vivo" (liveness) de "pronto" (readiness)?
+### 38. Existem health checks separando "vivo" (liveness) de "pronto" (readiness)?
 
 > **Opção 1 — Se há só um health check genérico ou nenhum:**
 > - `GET /health/live` — processo está respondendo (sempre 200 se app não travou)
@@ -585,7 +752,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 26. Não há queries N+1 nas listagens principais?
+### 39. Não há queries N+1 nas listagens principais?
 
 > *Pergunta-teste: "Para listar 100 itens, quantas queries ao banco são feitas?"*
 >
@@ -598,7 +765,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 27. Tratamento de erro nunca vaza stack trace ou detalhes internos em produção?
+### 40. Tratamento de erro nunca vaza stack trace ou detalhes internos em produção?
 
 > **Opção 1 — Se em produção o cliente vê stack trace ou nomes de tabela:**
 > - **CRÍTICO se em produção — vazamento de informação**
@@ -611,7 +778,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 28. CORS está configurado com allowlist específica (não wildcard `*`)?
+### 41. CORS está configurado com allowlist específica (não wildcard `*`)?
 
 > **Opção 1 — Se CORS usa `*` ou é permissivo:**
 > - Configurar `origin` como função que valida contra allowlist
@@ -623,7 +790,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 29. Há proteção contra CSRF para endpoints que aceitam cookies de autenticação?
+### 42. Há proteção contra CSRF para endpoints que aceitam cookies de autenticação?
 
 > *Se usa apenas `Authorization: Bearer` no header, risco é menor. Se usa cookies, atenção.*
 >
@@ -636,7 +803,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 30. Dependências estão atualizadas e auditadas?
+### 43. Dependências estão atualizadas e auditadas?
 
 > **Opção 1 — Se `npm audit` mostra vulnerabilidades altas/críticas:**
 > - Rodar `npm audit fix` (ou equivalente em outras linguagens)
@@ -650,7 +817,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🟢 DIFERENCIAÇÃO — separa sênior bom de sênior excelente
 
-### 31. Há correlation ID propagado por requisição (HTTP, logs, eventos assíncronos)?
+### 44. Há correlation ID propagado por requisição (HTTP, logs, eventos assíncronos)?
 
 > **Opção 1 — Se não:**
 > - Gerar `requestId` (UUID) em middleware no início de cada request
@@ -663,7 +830,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 32. Existem métricas/telemetria expostas (Prometheus, OpenTelemetry, APM)?
+### 45. Existem métricas/telemetria expostas (Prometheus, OpenTelemetry, APM)?
 
 > **Opção 1 — Se não há métricas:**
 > - Adicionar Prometheus (`prom-client`) ou OpenTelemetry
@@ -675,7 +842,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 33. Operações destrutivas usam soft delete em vez de hard delete?
+### 46. Operações destrutivas usam soft delete em vez de hard delete?
 
 > **Opção 1 — Se `DELETE` apaga registros para sempre:**
 > - Adicionar campo `deletedAt: Date | null` nos schemas
@@ -687,7 +854,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 34. Existe audit log para ações sensíveis (login, logout, convite, exclusão, mudança de permissão)?
+### 47. Existe audit log para ações sensíveis (login, logout, convite, exclusão, mudança de permissão)?
 
 > **Opção 1 — Se não há registro de ações sensíveis:**
 > - Criar tabela/coleção `audit_logs`
@@ -700,7 +867,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 35. Existe plano de backup e recuperação documentado?
+### 48. Existe plano de backup e recuperação documentado?
 
 > **Opção 1 — Se não há `DISASTER_RECOVERY.md`:**
 > - Criar `docs/DISASTER_RECOVERY.md`
@@ -718,7 +885,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 36. Política de retenção de dados está definida (especialmente para LGPD/GDPR)?
+### 49. Política de retenção de dados está definida (especialmente para LGPD/GDPR)?
 
 > **Opção 1 — Se não há política definida:**
 > - Documentar em `docs/DATA_RETENTION.md`:
@@ -733,7 +900,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 37. Aplicação está containerizada com Dockerfile multi-stage?
+### 50. Aplicação está containerizada com Dockerfile multi-stage?
 
 > **Opção 1 — Se não há Docker ou só Dockerfile simples:**
 > - Dockerfile multi-stage: builder (com toolchain) + runtime (mínimo)
@@ -746,7 +913,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 38. Há decisões arquiteturais documentadas (ADRs — Architecture Decision Records)?
+### 51. Há decisões arquiteturais documentadas (ADRs — Architecture Decision Records)?
 
 > *Sênior documenta por que escolheu X em vez de Y.*
 >
@@ -766,7 +933,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🎨 FRONTEND — checks específicos do cliente
 
-### 39. Onde o access token (JWT) é armazenado no frontend?
+### 52. Onde o access token (JWT) é armazenado no frontend?
 
 > **Opção 1 — Se está em `localStorage` ou `sessionStorage`:**
 > - **Vulnerável a XSS** — qualquer script consegue ler
@@ -776,13 +943,42 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 >   - `sameSite: 'strict'` (ou `'lax'` se houver navegação cross-site legítima)
 >   - Validar header `Origin`/`Referer` no `/refresh`
 >   - Para apps mais expostos: double-submit token ou anti-CSRF token
->   - 🔗 *Ver item 29 — CSRF é a contrapartida do trade-off "cookie httpOnly vs localStorage"*
+>   - 🔗 *Ver item 42 — CSRF é a contrapartida do trade-off "cookie httpOnly vs localStorage"*
 >
 > **Opção 2 — Se está em memória ou cookie httpOnly COM proteção CSRF:** ✅ Excelente
 
 ---
 
-### 40. Conteúdo fornecido por usuário é sanitizado antes de renderizar como HTML?
+### 53. O guard de rota do frontend valida o token de verdade (decode + verificação de expiração + opcionalmente assinatura), ou apenas verifica `if (token)` — permitindo bypass com `localStorage.setItem('token','x')` no console?
+
+> *Pergunta-teste: "Eu abro o console no site em produção, digito `localStorage.setItem('app_token','qualquer_string')` e dou refresh — consigo entrar na área protegida?" Se a resposta for sim, o guard é cosmético.*
+>
+> *Esse bug é especialmente comum em apps com "modo demo" ou "modo portfólio", onde o autor implementa um shortcut de auth que aceita um token literal hardcoded — e esquece de remover o check frouxo na rota real.*
+>
+> **Opção 1 — Se o `ProtectedRoute` aceita qualquer string truthy:**
+> - **Bypass trivial** — qualquer visitante entra no dashboard sem credencial nenhuma
+> - Validar minimamente: decode do JWT, verificar `exp` (expiração) e formato
+>   ```typescript
+>   import { jwtDecode } from 'jwt-decode';
+>   function isTokenValid(token: string | null): boolean {
+>     if (!token) return false;
+>     try {
+>       const payload = jwtDecode<{ exp: number }>(token);
+>       return payload.exp * 1000 > Date.now();
+>     } catch { return false; }
+>   }
+>   ```
+> - Idealmente: validar contra o backend (chamada `/me` ou `/verify`) no boot da rota protegida
+> - **Nunca** comparar token contra string literal hardcoded (`token === 'demo_token'`)
+> - Se houver "modo demo" intencional, isolar em rota separada (`/demo`) com dados sintéticos próprios — não usar o `ProtectedRoute` real
+> - Adicionar teste E2E: "console.log + localStorage.setItem + navigate(/dashboard) → redireciona pra login"
+> - 🔗 *Relacionado: item 52 (onde o token é armazenado). 52 cobre o local; 53 cobre se o guard realmente valida o que está nesse local.*
+>
+> **Opção 2 — Se o guard valida o token de verdade:** ✅ Excelente
+
+---
+
+### 54. Conteúdo fornecido por usuário é sanitizado antes de renderizar como HTML?
 
 > *Aplica-se a campos como `description`, `bio`, `comment`, qualquer texto renderizado.*
 >
@@ -796,7 +992,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 41. CSP está configurada também no servidor que entrega o frontend (Vercel/Netlify/etc)?
+### 55. CSP está configurada também no servidor que entrega o frontend (Vercel/Netlify/etc)?
 
 > **Opção 1 — Se CSP só está no backend da API:**
 > - Configurar headers no `vercel.json`, `_headers` (Netlify), ou Nginx
@@ -807,7 +1003,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 42. Erros do backend são tratados sem expor detalhes técnicos ao usuário?
+### 56. Erros do backend são tratados sem expor detalhes técnicos ao usuário?
 
 > **Opção 1 — Se UI mostra stack trace ou mensagens cruas do backend:**
 > - Adicionar boundary de erro (React Error Boundary)
@@ -825,7 +1021,7 @@ Ao final da auditoria:
 1. **Conte quantos itens caíram em "Opção 1"** (problema existe)
 2. **Categorize por severidade** (bloqueador / essencial / qualidade / diferenciação)
 3. **Estime tempo de correção** de cada item
-4. **Priorize**: bloqueadores SEMPRE primeiro, mesmo que demorem
+5. **Priorize**: bloqueadores SEMPRE primeiro, mesmo que demorem
 5. **Crie um issue/task** para cada item de "Opção 1"
 6. **Mantenha esse checklist atualizado** — adicione perguntas novas a cada projeto que te ensinar algo
 

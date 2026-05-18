@@ -192,6 +192,34 @@ git push
 - `refactor:` renumerar, reorganizar sem mudar conteúdo (ex: split, renumber)
 - `chore:` ajuste menor (CHANGELOG, gitignore)
 
+**Sincronizar a cópia local (`Protocolo de Segurança/`) com o repo (`REPOSITORIO DE SEGURANÇA-GITHUB/`):**
+
+Sempre que alterar arquivos no repo versionado, ressincronize a cópia local que você usa em auditorias do dia a dia:
+
+```bash
+# Via rsync (preferencial — espelha exato, deleta o que sobrou)
+rsync -av --delete --exclude='.git' \
+  "../REPOSITORIO DE SEGURANÇA-GITHUB/" \
+  "../Protocolo de Segurança/"
+
+# Via cp puro (Git Bash no Windows, se não tiver rsync)
+rm -rf "../Protocolo de Segurança/context-addons"
+cp -r "../REPOSITORIO DE SEGURANÇA-GITHUB/context-addons" "../Protocolo de Segurança/"
+cp "../REPOSITORIO DE SEGURANÇA-GITHUB"/*.md "../Protocolo de Segurança/"
+cp "../REPOSITORIO DE SEGURANÇA-GITHUB/.gitignore" "../Protocolo de Segurança/"
+```
+
+**Verificar que estão idênticos (após sync):**
+
+```bash
+find "../REPOSITORIO DE SEGURANÇA-GITHUB/" -type f ! -path "*/.git/*" -printf "%P\t%s\n" | sort > /tmp/r.txt
+find "../Protocolo de Segurança/" -type f -printf "%P\t%s\n" | sort > /tmp/p.txt
+diff /tmp/r.txt /tmp/p.txt && echo "✅ idênticos"
+rm /tmp/r.txt /tmp/p.txt
+```
+
+> **Por que importa:** `REPOSITORIO DE SEGURANÇA-GITHUB/` é o repo versionado (histórico, PRs, público). `Protocolo de Segurança/` é a cópia operacional que você abre quando vai auditar projeto novo. Se elas divergirem, você audita com framework desatualizado e pode perder bugs que perguntas novas (5C, 23B, etc.) teriam pego.
+
 ---
 
 ## 📊 Tabela: o que cada fase entrega

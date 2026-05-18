@@ -85,3 +85,16 @@
 > - Ou signed URLs de curta duração (S3 pre-signed URLs)
 >
 > **Opção 2 — Se downloads são autorizados:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **B7 (download authz)** ↔ É a versão "arquivo" da autorização granular a recurso. Mesma classe em outras superfícies:
+  - **[A3 (room control em socket)](A_WEBSOCKET.md)**
+  - **[D3 (no cross-tenant)](D_MULTI_TENANT.md)**
+  - **[E4 (RAG tenant-aware)](E_LLM.md)**
+  - Princípio universal: **item 2** do `AUDIT_CHECKLIST.md` (autorização em toda operação) + **item 33** (IDs com formato estrito — chave de URL não deve ser previsível).
+- **B5 (reprocessar imagens) + B6 (scan AV)** ↔ Se o upload alimenta um LLM, ver **[E2 (validar output do LLM)](E_LLM.md)** — payload malicioso pode atravessar via prompt injection.
+- **B1 (allowlist por magic bytes)** ↔ Princípio universal: **item 5** do checklist (input validation por biblioteca antes do controller).
+- **B3 (storage isolado)** ↔ Se o link de download é JWT-signed, confirmar **item 10** (JWT com algoritmo seguro).

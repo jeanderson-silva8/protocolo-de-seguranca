@@ -82,3 +82,19 @@
 > - Métrica de duração por tipo de job para detectar regressões
 >
 > **Opção 2 — Se há timeout:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **I1 (consumer idempotente)** ↔ Mesma classe de "operação que pode rodar 2× e não pode duplicar efeito" em outras superfícies:
+  - **[C3 (idempotency keys de pagamento)](C_PAGAMENTO.md)**
+  - **[F4 (retry de webhook)](F_APIS_PUBLICAS.md)**
+  - Princípio universal: **item 23** do `AUDIT_CHECKLIST.md` (race conditions / TOCTOU) e **item 28** (operações de cota atômicas).
+- **I3 (consumer valida payload)** ↔ Mesma defesa Zod/Pydantic em outras camadas:
+  - **[A4 (validar payload de socket event)](A_WEBSOCKET.md)**
+  - Princípio universal: **item 5** (input validation por biblioteca antes do controller)
+- **I5 (payloads de fila magros)** ↔ Mesma classe "não persistir o que não precisa" em:
+  - **[E5 (logs de LLM)](E_LLM.md)**, **[H2 (PII minimization)](H_DADOS_SENSIVEIS.md)**
+  - Princípio universal: **item 25** (logs limpos de PII/segredos)
+- **I4 (broker com auth + rede privada)** ↔ Princípio universal: **item 13** (segredos fora do código) — credenciais do broker têm que vir de env/vault.

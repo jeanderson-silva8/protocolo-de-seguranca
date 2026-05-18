@@ -85,3 +85,19 @@
 > - 🔗 *Mesma classe de problema vale para outros rate limits do app — auditar item de rate limit por usuário no `AUDIT_CHECKLIST.md` também.*
 >
 > **Opção 2 — Cota é centralizada (Redis/banco) ou explicitamente single-instance documentado:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **E1 (input não-confiável)** ↔ Princípio universal: **item 5** do `AUDIT_CHECKLIST.md` (validação por biblioteca antes do controller) + **item 4** (identidade não vem do payload).
+- **E2 (validar output do LLM)** ↔ Se o LLM gera SQL ou comandos, ver **item 14** (queries parametrizadas) e **item 16** (sem desserialização insegura nem SSTI).
+- **E4 (RAG tenant-aware)** ↔ É a versão "vector search" da autorização granular. Mesma classe em outras superfícies:
+  - **[A3 (room control)](A_WEBSOCKET.md)**, **[B7 (download authz)](B_UPLOAD.md)**, **[D3 (no cross-tenant)](D_MULTI_TENANT.md)**, **[J5 (authz por resolver)](J_GRAPHQL.md)**
+  - Princípio universal: **item 2** (autorização em toda operação)
+- **E5 (logs limpos de PII)** ↔ Mesma classe em outras superfícies:
+  - **[I5 (payloads de fila magros)](I_FILAS.md)**, **[H2 (PII minimization)](H_DADOS_SENSIVEIS.md)**
+  - Princípio universal: **item 25** (logs limpos de PII/segredos)
+- **E6 (rate limit distribuído)** ↔ Mesma armadilha "in-memory funciona em dev, quebra ao escalar" aparece em:
+  - **[A5 (rate limit de socket)](A_WEBSOCKET.md)**, **[F1 (rate limit em APIs públicas)](F_APIS_PUBLICAS.md)**
+  - Princípio universal: **item 35** (rate limit por usuário, não só por IP) + **item 36** (IP confiável atrás de proxy).

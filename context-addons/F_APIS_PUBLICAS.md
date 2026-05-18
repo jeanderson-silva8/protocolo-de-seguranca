@@ -47,3 +47,16 @@
 > - Dead-letter queue para investigação
 >
 > **Opção 2 — Se há retry resiliente:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **F1 (rate limit em APIs públicas)** ↔ Mesma armadilha de rate limit em outras superfícies:
+  - **[A5 (rate limit de socket)](A_WEBSOCKET.md)**, **[E6 (rate limit de LLM distribuído)](E_LLM.md)** — atenção a in-memory vs Redis quando escalar.
+  - Princípio universal: **item 35** do `AUDIT_CHECKLIST.md` (rate limit por usuário, não só IP) + **item 36** (IP confiável atrás de proxy — sem isso o rate limit por IP é teatro).
+- **F3 (assinar webhooks que você envia)** ↔ **[C2 (validar assinatura de webhook recebido)](C_PAGAMENTO.md)** — duas pontas da mesma defesa HMAC.
+- **F4 (retry com backoff)** ↔ Mesma classe de "operação que pode falhar e precisa retry" aparece em:
+  - **[I1 (consumer idempotente)](I_FILAS.md)** + **[I2 (DLQ)](I_FILAS.md)**
+  - **[C3 (idempotency keys de pagamento)](C_PAGAMENTO.md)**
+- **F2 (versionamento de API)** ↔ Princípio universal: **item 30** (README honesto sobre o que está e o que não está estável).

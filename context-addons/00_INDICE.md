@@ -25,20 +25,29 @@
 
 ## 📋 Os 10 adendos disponíveis
 
-| Adendo | Itens | Arquivo |
-|--------|-------|---------|
-| 🔌 **A — WebSocket / Real-time** | 8 (A1, A2, A2B, A3-A7) | [A_WEBSOCKET.md](A_WEBSOCKET.md) |
-| 📁 **B — Upload de arquivos** | 7 (B1-B7) | [B_UPLOAD.md](B_UPLOAD.md) |
-| 💳 **C — Pagamento** | 5 (C1-C5) | [C_PAGAMENTO.md](C_PAGAMENTO.md) |
-| 🏢 **D — Multi-tenant / SaaS B2B** | 6 (D1-D6) | [D_MULTI_TENANT.md](D_MULTI_TENANT.md) |
-| 🤖 **E — Aplicações com IA / LLM** | 6 (E1-E6) | [E_LLM.md](E_LLM.md) |
-| 📡 **F — APIs públicas / Webhooks** | 4 (F1-F4) | [F_APIS_PUBLICAS.md](F_APIS_PUBLICAS.md) |
-| 📱 **G — Mobile** | 3 (G1-G3) | [G_MOBILE.md](G_MOBILE.md) |
-| 🧪 **H — Dados sensíveis (saúde, financeiro, jurídico)** | 4 (H1-H4) | [H_DADOS_SENSIVEIS.md](H_DADOS_SENSIVEIS.md) |
-| 📨 **I — Filas / Workers / Mensageria** | 6 (I1-I6) | [I_FILAS.md](I_FILAS.md) |
-| 🔍 **J — GraphQL** | 6 (J1-J6) | [J_GRAPHQL.md](J_GRAPHQL.md) |
+| Adendo | Arquivo |
+|--------|---------|
+| 🔌 **A — WebSocket / Real-time** | [A_WEBSOCKET.md](A_WEBSOCKET.md) |
+| 📁 **B — Upload de arquivos** | [B_UPLOAD.md](B_UPLOAD.md) |
+| 💳 **C — Pagamento** ⚠️ *intencionalmente conciso* | [C_PAGAMENTO.md](C_PAGAMENTO.md) |
+| 🏢 **D — Multi-tenant / SaaS B2B** | [D_MULTI_TENANT.md](D_MULTI_TENANT.md) |
+| 🤖 **E — Aplicações com IA / LLM** | [E_LLM.md](E_LLM.md) |
+| 📡 **F — APIs públicas / Webhooks** | [F_APIS_PUBLICAS.md](F_APIS_PUBLICAS.md) |
+| 📱 **G — Mobile** ⚠️ *intencionalmente conciso* | [G_MOBILE.md](G_MOBILE.md) |
+| 🧪 **H — Dados sensíveis (saúde, financeiro, jurídico)** | [H_DADOS_SENSIVEIS.md](H_DADOS_SENSIVEIS.md) |
+| 📨 **I — Filas / Workers / Mensageria** | [I_FILAS.md](I_FILAS.md) |
+| 🔍 **J — GraphQL** | [J_GRAPHQL.md](J_GRAPHQL.md) |
 
-**Total:** 55 perguntas distribuídas em 10 adendos. Nenhum projeto usa todos — a média é 2-4 adendos aplicáveis por projeto.
+Nenhum projeto usa todos — a média é 2-4 adendos aplicáveis por projeto.
+
+### ⚠️ Adendos intencionalmente concisos (C, G)
+
+**Pagamento (C)** e **Mobile (G)** têm menos perguntas que os outros — não por descuido, por **disciplina do método**: nenhum item foi adicionado sem auditoria de projeto real que justifique. Quando os primeiros projetos de pagamento real ou mobile real forem auditados aqui, esses adendos crescem com itens que têm rastro de origem (ver `WORKFLOW.md`).
+
+Tópicos que **ainda não estão** mas merecem entrar quando o caso real aparecer:
+
+- **Pagamento:** 3D Secure, SCA (Strong Customer Authentication) europeia, conciliação de pagamentos vs cobranças, tratamento de chargebacks, prevenção de fraude (velocity checks, device fingerprinting), dunning management.
+- **Mobile:** jailbreak/root detection, screen recording protection em telas sensíveis, deep link hijacking, intent injection no Android, App Attestation, Play Integrity.
 
 ---
 

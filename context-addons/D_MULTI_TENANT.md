@@ -73,3 +73,16 @@
 > - Ou invalidar refresh tokens do usuário ao removê-lo
 >
 > **Opção 2 — Se acesso é revogado em tempo real:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **D3 (no cross-tenant)** ↔ É a versão "banco" da autorização granular a recurso. Mesma classe em outras superfícies:
+  - **[A3 (room control em socket)](A_WEBSOCKET.md)**
+  - **[B7 (download authz)](B_UPLOAD.md)**
+  - **[E4 (RAG tenant-aware)](E_LLM.md)** — especialmente importante: vector search vaza chunks de docs de outros tenants se não filtrar
+  - **[J5 (authz por resolver GraphQL)](J_GRAPHQL.md)** — campo aninhado pode vazar mesmo com auth na query raiz
+  - Princípio universal: **item 2** do `AUDIT_CHECKLIST.md` (autorização em toda operação) + **item 3** (IDs sensíveis vêm da sessão, não do payload).
+- **D2 (filtro automático por tenant no ORM)** ↔ **[E4](E_LLM.md)** — vector search também precisa de filtro automático.
+- **D6 (revogação ao sair)** ↔ Princípio universal: **item 10** (JWT com estratégia de revogação) e **item 47** (audit log da remoção).

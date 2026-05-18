@@ -84,3 +84,17 @@
 > - Cuidado especial com erros do banco que podem vazar nome de tabela/coluna
 >
 > **Opção 2 — Se erros são sanitizados em prod:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **J5 (autorização por resolver)** ↔ É a versão "GraphQL" da autorização granular a recurso. Mesma classe em outras superfícies:
+  - **[A3 (room control)](A_WEBSOCKET.md)**, **[B7 (download authz)](B_UPLOAD.md)**, **[D3 (no cross-tenant)](D_MULTI_TENANT.md)**, **[E4 (RAG tenant-aware)](E_LLM.md)**
+  - Princípio universal: **item 2** do `AUDIT_CHECKLIST.md` (autorização em toda operação) e **item 4** (identidade em handlers async).
+- **J3 (query complexity)** ↔ Versão GraphQL do rate limit por custo. Princípio universal: **item 35** (rate limit por usuário, não só IP) e **item 45** (métricas pra detectar custo anômalo).
+- **J4 (batching/aliasing attacks)** ↔ Mesma classe "atacante faz N operações em 1 request" aparece em:
+  - **[A5 (rate limit de socket event)](A_WEBSOCKET.md)** — alguns clientes emitem rajada num só pacote.
+  - Princípio universal: **item 12** (brute force protection) — aliasing é o vetor moderno de bypass de rate limit.
+- **J1 (introspecção off em prod)** ↔ Princípio universal: **item 40** (erros sem vazar internals em prod) — schema é um tipo de "internal" que vaza.
+- **Se o GraphQL é multi-tenant**, J5 + **[D2 (filtro automático no ORM)](D_MULTI_TENANT.md)** precisam trabalhar juntos: cada resolver field-level + cada query escopada por tenant.

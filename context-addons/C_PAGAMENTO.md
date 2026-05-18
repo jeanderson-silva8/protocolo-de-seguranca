@@ -60,3 +60,17 @@
 > - Audit log obrigatório
 >
 > **Opção 2 — Se histórico é imutável:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **C2 (validação de assinatura de webhook recebido)** ↔ **[F3 (assinar webhooks que você envia)](F_APIS_PUBLICAS.md)** — duas pontas da mesma defesa HMAC.
+- **C3 (idempotency keys)** ↔ Mesma classe em outras superfícies:
+  - **[I1 (consumer idempotente)](I_FILAS.md)** — fila pode entregar mensagem 2×
+  - **[F4 (retry de webhook)](F_APIS_PUBLICAS.md)** — provider remoto pode reenviar
+  - Princípio universal: **item 23** do `AUDIT_CHECKLIST.md` (race conditions / TOCTOU) e **item 28** (operações de cota atômicas).
+- **C5 (histórico imutável)** ↔ Princípio universal: **item 47** (audit log de ações sensíveis).
+- **C1 (valor vem do servidor, nunca do cliente)** ↔ Princípio universal: **item 3** (IDs/valores sensíveis vêm da sessão, não do payload).
+
+> ⚠️ **Adendo intencionalmente conciso.** Pagamento real tem muito mais armadilhas (3D Secure, SCA europeia, conciliação, chargebacks, fraude/velocity checks, dunning management). Essas vão entrar quando uma auditoria em projeto de pagamento real ditar — não força agora pra evitar conteúdo sem rastro de origem. Ver `WORKFLOW.md` (regra: nunca adicionar item sem caso real).

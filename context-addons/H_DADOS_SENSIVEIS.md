@@ -53,3 +53,17 @@
 > - Acessível para o titular (transparência — LGPD/GDPR)
 >
 > **Opção 2 — Se há audit log de acesso a PII:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **H1 (encryption-at-rest)** ↔ Mesma defesa "criptografar onde os dados descansam" em outras camadas:
+  - **[G3 (storage criptografado no mobile)](G_MOBILE.md)**
+  - Princípio universal: **item 48** (plano de backup com criptografia separada)
+- **H2 (PII minimization)** ↔ Mesma classe de "não persistir o que não precisa" em outras superfícies:
+  - **[E5 (logs de LLM sem PII)](E_LLM.md)**
+  - **[I5 (payloads de fila magros)](I_FILAS.md)**
+  - Princípio universal: **item 25** (logs limpos de PII/segredos)
+- **H4 (audit log de acesso a PII)** ↔ Princípio universal: **item 47** (audit log de ações sensíveis). H4 é a versão mais granular: registrar LEITURA, não só modificação.
+- **H3 (PII em tabela dedicada)** ↔ Se app é multi-tenant, ver **[D2 (filtro automático por tenant)](D_MULTI_TENANT.md)** — manager/middleware do ORM deve cobrir AMBAS as dimensões (tenant E permissão de PII).

@@ -38,3 +38,16 @@
 > - Considerar biometria para acesso a dados críticos
 >
 > **Opção 2 — Se storage local é criptografado:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+- **G2 (sem secrets no binário)** ↔ Princípio universal: **item 13** do `AUDIT_CHECKLIST.md` (segredos fora do código versionado). Reforço móvel: binário é "fora do código" só na teoria — qualquer string descompila.
+- **G3 (storage local criptografado)** ↔ Mesma classe "onde o token vive" no frontend web:
+  - **item 52** do checklist (onde o access token é armazenado)
+  - **item 53** (guard de rota valida o token)
+  - **[H1 (encryption-at-rest no banco)](H_DADOS_SENSIVEIS.md)** — mesma defesa em outra camada
+- **G1 (certificate pinning)** ↔ Princípio universal: **item 31** (headers de segurança HTTP — HSTS é o equivalente web).
+
+> ⚠️ **Adendo intencionalmente conciso.** Mobile profundo tem muito mais (jailbreak/root detection, screen recording protection, deep link hijacking, intent injection no Android, App Attestation, Play Integrity). Vão entrar quando uma auditoria em projeto mobile real ditar — não força agora pra evitar conteúdo sem rastro de origem. Ver `WORKFLOW.md` (regra: nunca adicionar item sem caso real).

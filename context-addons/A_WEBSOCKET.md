@@ -116,3 +116,21 @@
 > - Emitir apenas mensagem genérica: `socket.emit('error', { message: 'Operação falhou', code: 'OP_FAILED' })`
 >
 > **Opção 2 — Se erros são tratados:** ✅ Excelente
+
+---
+
+## 🔗 Adendos relacionados
+
+A maioria das classes de bug deste adendo aparece em outros adendos com forma diferente. Quando o projeto cruzar contextos, audite o conjunto, não cada um isolado.
+
+- **A2, A2B (identidade do socket)** ↔ Se o app tem queues ou jobs, mesma classe vale lá → **item 4 do `AUDIT_CHECKLIST.md`** (identidade em handlers async).
+- **A3 (controle de room)** ↔ É a versão "socket" da autorização granular a recurso. Mesma classe em outras superfícies:
+  - **[B7 (download authz)](B_UPLOAD.md)** — versão "arquivo"
+  - **[D3 (no cross-tenant)](D_MULTI_TENANT.md)** — versão "tabela/banco"
+  - **[E4 (RAG tenant-aware)](E_LLM.md)** — versão "vector search"
+  - Princípio universal: **item 2** do checklist (autorização em toda operação)
+- **A5 (rate limit por socket)** ↔ Mesma classe de rate limit aparece em:
+  - **[E6 (rate limit de LLM distribuído)](E_LLM.md)** — atenção a in-memory vs Redis
+  - **[F1 (rate limit em APIs públicas)](F_APIS_PUBLICAS.md)**
+  - Princípio universal: **item 35** (rate limit por usuário, não só IP) + **item 36** (IP confiável atrás de proxy)
+- **A4 (validação de payload Zod)** ↔ **[I3](I_FILAS.md)** (consumer valida payload de fila) — mesma defesa em superfície diferente.

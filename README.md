@@ -62,6 +62,10 @@ Auditoria de um app de IA/LLM com chat, transcrição e summarização. **Result
 
 Auditoria comparativa v1 → v2 de um SaaS colaborativo com WebSocket. **Resultado:** 26 itens universais + 7 itens de WebSocket implementados a partir da revisão anterior. 1 IDOR sutil descoberto em handler de socket (identidade vindo do payload do cliente em vez do handshake) — esse achado virou os itens 3B e A2B nos checklists.
 
+### [`AUDIT_REPORT_Lumina-Booking-SaaS_2026-05-17.md`](AUDIT_REPORT_Lumina-Booking-SaaS_2026-05-17.md)
+
+Auditoria de uma demo de portfólio (Django + GraphQL + React) que se posicionava como SaaS B2B. **Resultado:** 1 item sólido, 4 parciais, 13 críticos — a maior parte dos críticos é **independente do escopo de portfólio** (introspecção GraphQL em prod, `ProtectedRoute` aceitando qualquer string como autenticado, fallback inseguro no `docker-compose`, lib JWT abandonada). Auditoria gerou 2 perguntas novas: item **5C** (orquestração preserva o fail-fast do app?) e item **39B** (guard de rota valida token de verdade ou só `if (token)`?). Exemplo de como o método trata diferença entre "decisão consciente de escopo" e "bug real".
+
 ### [`AUDIT_REPORT_Lumina-Booking-SaaS_v2_2026-05-18.md`](AUDIT_REPORT_Lumina-Booking-SaaS_v2_2026-05-18.md)
 
 Segunda passada sobre o Lumina, **validando se as 25 correções declaradas pela v1 estavam de fato no código**. **Resultado:** 23 de 25 confirmadas (92%) + 4 achados novos. Encontrou 1 vulnerabilidade crítica que tinha escapado (rate limit por IP que lia `X-Forwarded-For` cru — atacante drible com `curl -H 'X-Forwarded-For: 1.2.3.4'`) e dois casos onde a v1 violou itens do checklist que ela mesma criou (5C e 39B). Auditoria gerou 2 perguntas novas: item **23B** (IP confiável atrás de proxy?) e item **20B** (CSP sem `'unsafe-inline'` em `script-src`?). **Lição meta:** auditor não pode auditar a si mesmo sem perder calibração — segunda passada com olhar fresco é parte do método.

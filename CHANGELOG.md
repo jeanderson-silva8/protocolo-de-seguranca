@@ -9,6 +9,39 @@
 
 ---
 
+## [1.6.0] — 2026-05-18
+
+### Adicionado
+- `PROMPT_AUDITORIA_PARANOICO.md` — variante do PROMPT_AUDITORIA padrão que exige **passada dupla automática** no mesmo turno (1ª passada normal + auto-revisão adversarial obrigatória da matriz). Custo: ~2× tempo, ~30% mais tokens. Benefício: cobertura sobe de ~85% real (padrão) para ~95% real. Inclui:
+  - Tabela "quando usar paranoico vs padrão" (portfólio → padrão; produção crítica/PII real/pós-incidente → paranoico)
+  - 12 fases (vs 6 do padrão): adiciona auto-revisão da matriz (Fase 5), caça-aos-fantasmas com lentes específicas (Fase 6), verificação de amostragem de 3 ✅ aleatórios (Fase 7), aplicação cruzada de padrões (Fase 8), reflexão meta sobre as duas passadas (Fase 10)
+  - Regra reforçada de ✅: âncora `arquivo:linha` **+ confirmação de execução em produção** (não dev/test/staging — lição direta do TrendScope onde `boot.ts` tinha defesas mas não era o entrypoint de prod)
+
+### Origem
+- 2ª passada de cobertura do TrendScope (entrada [1.5.0] acima) achou 6 críticos novos que escaparam à Passada 1 — incluindo C14 (`strict-ssl false` + mirror npm não-oficial). Isso mostrou que pra projetos críticos, a 2ª passada **não pode ser opcional** — vira parte do mesmo workflow. Modo paranoico automatiza o que fizemos manualmente.
+- Decisão de manter os DOIS templates (padrão + paranoico) em vez de só o paranoico: nem todo projeto justifica 2× o custo. Portfólios e MVPs ficam bem com 85%.
+
+---
+
+## [1.5.0] — 2026-05-18
+
+### Adicionado
+- **Item 17 novo** no `AUDIT_CHECKLIST.md` (🔴 Bloqueadores): "Em projetos serverless / multi-entrypoint, o caminho de produção é o MESMO que o caminho auditado?" — derivado da auditoria do TrendScope, onde o projeto mantém `server/boot.ts` (com CORS+headers+bodyLimit) e `api/trpc/[...trpc].ts` (handler Vercel que duplica 262 linhas SEM nenhuma dessas defesas), e é o segundo que serve o tráfego de produção. Bug invisível para auditor que lê só o entrypoint de dev.
+- `AUDIT_REPORT_TrendScope_2026-05-18.md` documenta a primeira auditoria do TrendScope. **Após 2 passadas**: 4 sólidos + 4 parciais + **11 críticos** (5 originais + 6 da passada de cobertura) + 8 achados fora do checklist + matriz completa de 57 itens + 10 adendos.
+- **Regra nova no `PROMPT_AUDITORIA.md` (Fase 1, instrução 8 — OBRIGATÓRIO):** relatório deve conter **matriz de cobertura completa** com 1 linha por item (57 do checklist + adendos rodados/N/A). Sem isso, lacunas viram zona cinzenta.
+
+### Mudado
+- **Renumeração:** o agente adicionou inicialmente como "17B" (regredindo a v1.2.0). Imediatamente shift aplicado: 17B → 17, e todos os itens 17-56 → 18-57. Total agora **1-57 sequencial**. TOC, ranges das seções, cross-refs internas e nota de migração atualizados na mesma passada. Os relatórios anteriores (incluindo a versão do TrendScope publicada minutos antes desta renumeração) **não foram reescritos** — preservam o "17B" original, com tradução via nota de migração.
+
+### Origem
+- TrendScope 2026-05-18: README declara "Protocolo de Segurança Enterprise" detalhando CORS, headers, body limit, rate limit em `server/boot.ts`. Auditoria confirma que o `boot.ts` está correto — mas `vercel.json` é praticamente vazio (`{"framework": "vite"}`) e o tráfego real entra por `api/trpc/[...trpc].ts`, um handler Vercel Node.js que reimplementa toda a lógica sem chamar nenhum middleware. Lição: em apps serverless híbridos, "auditar `boot.ts`" não basta — é preciso seguir o entrypoint da plataforma.
+
+### Lições meta documentadas
+1. **Sufixo B/C reaparece por inércia** — o agente que executou a v1 via PROMPT_AUDITORIA adicionou "17B" por reflexo, regredindo v1.2.0. Reforça que renumeração imediata é parte do fluxo. PROMPT_AUDITORIA Fase 5 ganhou ⚠️ explícito contra sufixos.
+2. **Cobertura implícita não é cobertura** — a v1 cobriu 38 de 57 itens explicitamente; os 19 restantes ficaram em zona ambígua (nem confirmados, nem N/A, nem violados — simplesmente não mencionados). 2ª passada de cobertura achou 6 críticos novos, incluindo **C14 — Dockerfile com `npm config set strict-ssl false` + registry mirror não-oficial** (supply chain attack vector latente). Forçou regra nova de matriz obrigatória.
+
+---
+
 ## [1.4.0] — 2026-05-18
 
 ### Adicionado

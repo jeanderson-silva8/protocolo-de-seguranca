@@ -52,7 +52,7 @@ Adendos por contexto, **um arquivo por seção** — abra só os que se aplicam 
 
 ## 🔍 Auditorias reais
 
-A prova de que os checklists funcionam está em aplicá-los. Quatro relatórios completos disponíveis:
+A prova de que os checklists funcionam está em aplicá-los. Cinco relatórios completos disponíveis:
 
 ### [`AUDIT_REPORT_BrieflyAI_2026-05-16.md`](AUDIT_REPORT_BrieflyAI_2026-05-16.md)
 
@@ -70,6 +70,10 @@ Auditoria de uma demo de portfólio (Django + GraphQL + React) que se posicionav
 
 Segunda passada sobre o Lumina, **validando se as 25 correções declaradas pela v1 estavam de fato no código**. **Resultado:** 23 de 25 confirmadas (92%) + 4 achados novos. Encontrou 1 vulnerabilidade crítica que tinha escapado (rate limit por IP que lia `X-Forwarded-For` cru — atacante drible com `curl -H 'X-Forwarded-For: 1.2.3.4'`) e dois casos onde a v1 violou itens do checklist que ela mesma criou (5C e 39B). Auditoria gerou 2 perguntas novas: item **23B** (IP confiável atrás de proxy?) e item **20B** (CSP sem `'unsafe-inline'` em `script-src`?). **Lição meta:** auditor não pode auditar a si mesmo sem perder calibração — segunda passada com olhar fresco é parte do método.
 
+### [`AUDIT_REPORT_TrendScope_2026-05-18.md`](AUDIT_REPORT_TrendScope_2026-05-18.md)
+
+Auditoria de um motor de curadoria de tendências (React + Hono + tRPC + Drizzle + TiDB Serverless, deploy Vercel) que se descreve como "Protocolo de Segurança Enterprise". **Resultado (após 2 passadas):** 4 sólidos, 4 parciais, **11 críticos** + 8 achados fora do checklist + matriz completa dos 57 itens. O bug central é arquitetural: o projeto mantém **duas implementações divergentes do backend** (`server/boot.ts` com CORS+headers+bodyLimit, e `api/trpc/[...trpc].ts` que duplica 262 linhas SEM nenhuma dessas defesas) — e é o segundo que efetivamente serve o tráfego em produção. Combinado com `.env` real copiado para dentro da imagem Docker, rate limit in-memory + IP forjável, e — descoberto na 2ª passada de cobertura — **Dockerfile com `npm config set strict-ssl false` + registry mirror não-oficial** (supply chain attack vector latente) + ErrorBoundary vazando `error.message` cru ao usuário em prod. Auditoria gerou **1 pergunta nova:** item **17** — "Em projetos serverless / multi-entrypoint, o caminho de produção é o MESMO que o caminho auditado?" (bug clássico em apps serverless onde middleware vive no entrypoint dev mas não no handler Vercel/Lambda). A inclusão deste item disparou shift dos demais (17→18, ..., 56→57), totalizando agora 1-57 sequencial. **Lição meta:** a 1ª passada cobriu 38 de 57 itens explicitamente; os 19 restantes ficaram ambíguos. A 2ª passada (com matriz exaustiva de cobertura) achou C14 (supply chain), C15 (Docker root), C16 (sem Dependabot), C17 (sem ADRs), C18 (ErrorBoundary leak), C19 (`dangerouslySetInnerHTML` morto). Forçou regra nova no `PROMPT_AUDITORIA.md`: relatório DEVE conter matriz de 1 linha por item — sem isso, lacunas viram zona cinzenta. **Lição meta:** em projetos serverless, auditar `boot.ts` não basta — é preciso seguir o `vercel.json` até o handler que de fato processa o request.
+
 Esses relatórios mostram o método em ação: o que foi confirmado no código, o que divergiu da intenção declarada, o que escapou ao checklist, e como cada bug encontrado retroalimentou os documentos universais.
 
 ---
@@ -78,7 +82,12 @@ Esses relatórios mostram o método em ação: o que foi confirmado no código, 
 
 ### 🤖 Caminho mais rápido — usando LLM agente (Claude, etc.)
 
-Use o [`PROMPT_AUDITORIA.md`](PROMPT_AUDITORIA.md): template pronto com 16 instruções, 5 regras inegociáveis e placeholders. Copia, troca os 6 `<<placeholders>>` (nome do projeto, pasta, stack, etc.), cola no chat. O agente segue as fases sozinho — leitura dos arquivos do framework, auditoria, classificação dos achados em bug/ADR/N/A, escrita do relatório no formato dos exemplos, promoção de achados ao checklist se for classe nova.
+Dois templates disponíveis, dependendo da criticidade do projeto:
+
+- **[`PROMPT_AUDITORIA.md`](PROMPT_AUDITORIA.md)** — padrão. 16 instruções, 5 regras inegociáveis. Cobertura ~85% real. 1× tempo. Use pra portfólio, MVP, demos.
+- **[`PROMPT_AUDITORIA_PARANOICO.md`](PROMPT_AUDITORIA_PARANOICO.md)** — modo paranoico. Passada dupla automática (1ª passada + auto-revisão adversarial da matriz). Cobertura ~95% real. ~2× tempo. Use pra produção crítica, sistemas financeiros, apps com PII real, pós-incidente, pré-due-diligence.
+
+Em ambos: copia, troca os `<<placeholders>>` (nome do projeto, pasta, stack, etc.), cola no chat. O agente segue as fases sozinho — leitura dos arquivos do framework, auditoria, classificação dos achados em bug/ADR/N/A, escrita do relatório no formato dos exemplos, promoção de achados ao checklist se for classe nova.
 
 ### 👤 Auditando manualmente (sem LLM)
 

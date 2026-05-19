@@ -43,6 +43,7 @@ Se não há nenhuma, escreva: "nenhuma — me pergunte se encontrar algo que par
 5. Aplique o `AUDIT_CHECKLIST.md` da seção 🔴 Bloqueadores até a 🎨 Frontend.
 6. Use `00_INDICE.md` para identificar quais adendos (A-J) se aplicam.
 7. Rode os adendos aplicáveis E leia a seção `🔗 Adendos relacionados` no fim de cada um.
+8. **OBRIGATÓRIO — Tabela de cobertura completa.** Ao final do relatório, inclua uma **"Matriz de cobertura"** com 1 linha para CADA UM dos 57 itens do `AUDIT_CHECKLIST.md` + adendos rodados, mostrando status: `✅ Confirmado` / `🟠 Parcial` / `🔴 Violado` / `🚫 N/A (motivo)`. Sem essa tabela, é impossível saber se itens importantes ficaram fora da análise por esquecimento vs por escopo. Lição: auditoria do TrendScope 2026-05-18 cobriu 38 de 57 itens explicitamente — os 19 restantes ficaram em zona ambígua e exigiram 2ª passada. Para CADA adendo NÃO rodado, registre explicitamente "Adendo X — N/A: [motivo]".
 
 ### Fase 2 — Disciplina de evidência (NÃO PULE)
 8. Para CADA item ✅, anote `arquivo.ext:linha` que prova a mitigação. **Sem âncora, o ✅ é só intenção — não conta.**
@@ -75,6 +76,7 @@ Se não há nenhuma, escreva: "nenhuma — me pergunte se encontrar algo que par
     - Pergunta-teste verificável
     - Receita acionável (não só "fique atento")
     - Não duplica item existente (se duplicar, é cross-reference, não item novo)
+    - ⚠️ **NUMERAÇÃO:** insira como número sequencial (não com sufixo B/C). Se o item entra entre o 16 e o 17, ele vira o NOVO 17 e todos os demais sofrem shift +1. Atualize TOC, ranges das seções (ex: "BLOQUEADORES (1-17)" → "(1-18)"), cross-refs internas, nota de migração. **NÃO use sufixos como `17B`** — isso regrediu a v1.2.0 quando aconteceu no TrendScope 2026-05-18; vide CHANGELOG `[1.5.0]`.
 
 ### Fase 6 — Entrega
 13. Salve o relatório em DOIS lugares:

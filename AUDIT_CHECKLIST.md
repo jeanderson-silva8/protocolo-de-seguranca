@@ -18,7 +18,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🗂️ Índice navegável
 
-### 🔴 BLOQUEADORES (1-17) — sem isso, é vulnerável
+### 🔴 BLOQUEADORES (1-18) — sem isso, é vulnerável
 
 | # | Pergunta |
 |---|----------|
@@ -38,9 +38,9 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | [14](#14-queries-ao-banco-usam-parâmetros-não-concatenação-de-string) | Queries parametrizadas (anti-injection) |
 | [15](#15-requisições-http-feitas-pelo-servidor-a-partir-de-input-do-usuário-são-protegidas-contra-ssrf) | Proteção contra SSRF |
 | [16](#16-não-há-desserialização-insegura-nem-renderização-de-templates-com-input-do-usuário-ssti) | Sem desserialização insegura nem SSTI |
-| [17](#17-cookies-de-sessãorefresh-têm-httponly-secure-samesite-configurados) | Cookies httpOnly/secure/sameSite |
+| [18](#18-cookies-de-sessãorefresh-têm-httponly-secure-samesite-configurados) | Cookies httpOnly/secure/sameSite |
 
-### 🟠 ESSENCIAIS (18-32) — sem isso, não é portfólio sênior
+### 🟠 ESSENCIAIS (19-33) — sem isso, não é portfólio sênior
 
 | # | Pergunta |
 |---|----------|
@@ -60,7 +60,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | 31 | Headers de segurança (Helmet/equivalente) |
 | 32 | CSP estrita (sem `'unsafe-inline'` em `script-src`) |
 
-### 🟡 QUALIDADE (33-43) — visível para quem audita
+### 🟡 QUALIDADE (34-44) — visível para quem audita
 
 | # | Pergunta |
 |---|----------|
@@ -76,7 +76,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | 42 | Proteção CSRF para endpoints com cookie |
 | 43 | Dependências atualizadas + audit (Dependabot) |
 
-### 🟢 DIFERENCIAÇÃO (44-51) — separa sênior bom de sênior excelente
+### 🟢 DIFERENCIAÇÃO (45-52) — separa sênior bom de sênior excelente
 
 | # | Pergunta |
 |---|----------|
@@ -89,7 +89,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | 50 | Dockerfile multi-stage |
 | 51 | ADRs documentando decisões |
 
-### 🎨 FRONTEND (52-56) — específico de cliente
+### 🎨 FRONTEND (53-57) — específico de cliente
 
 | # | Pergunta |
 |---|----------|
@@ -103,19 +103,21 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🔄 Nota de migração — numeração
 
-> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. A partir desta data, **a numeração foi compactada para sequencial 1-56** para melhor legibilidade.
+> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. Na primeira renumeração (v1.2.0), a numeração foi compactada para sequencial 1-56. Após a auditoria do TrendScope (v1.5.0), shift adicional levou a **sequencial 1-57** com a inserção do item 17 novo (serverless/multi-entrypoint) entre os antigos 16 (SSTI) e 17 (cookies).
 >
-> **Relatórios de auditoria publicados ANTES de 2026-05-18 usam a nomenclatura antiga.** Mapa de equivalência abreviado:
+> **Relatórios de auditoria publicados antes do shift usam a nomenclatura antiga.** Mapa de equivalência consolidado (sufixo antigo → número atual 1-57):
 >
-> | Antigo | Novo | | Antigo | Novo | | Antigo | Novo |
-> |--------|------|---|--------|------|---|--------|------|
-> | 3B | 4 | | 11B | 19 | | 23B | 36 |
-> | 5B | 7 | | 13B | 22 | | 39B | 53 |
-> | 5C | 8 | | 13C | 23 | | 20B | 32 |
-> | 6B | 10 | | 17B | 28 | | | |
+> | Antigo | Atual | | Antigo | Atual | | Antigo | Atual |
+> |--------|-------|---|--------|-------|---|--------|-------|
+> | 3B | 4 | | 11B | 20 | | 23B | 37 |
+> | 5B | 7 | | 13B | 23 | | 39B | 54 |
+> | 5C | 8 | | 13C | 24 | | 20B | 33 |
+> | 6B | 10 | | 17B (cotas) | 29 | | | |
 > | 6C | 11 | | | | | | |
 >
-> Os relatórios antigos (BrieflyAI 2026-05-16, FlowSnyker v2 2026-05-16, Lumina v1 2026-05-17, Lumina v2 2026-05-18) **não foram reescritos** — preservam o histórico real do método. Quando ler "item 5C" num relatório antigo, consulte este mapa.
+> ⚠️ **Atenção ao "17B" duplicado historicamente:** existem dois `17B` no histórico — o antigo (que era "operações de cota atômicas", virou item 29 após os dois shifts) e o do TrendScope 2026-05-18 (que era "serverless/multi-entrypoint", virou item 17 após shift). Quando ler relatório do Lumina v1/v2 citando "17B", refere-se ao primeiro (item 29 atual). Quando ler relatório do TrendScope 2026-05-18 citando "17B", refere-se ao segundo (item 17 atual).
+>
+> Os relatórios antigos (BrieflyAI 2026-05-16, FlowSnyker v2 2026-05-16, Lumina v1 2026-05-17, Lumina v2 2026-05-18, TrendScope 2026-05-18) **não foram reescritos** — preservam o histórico real do método. Quando ler item com sufixo num relatório, consulte este mapa.
 
 ---
 
@@ -409,7 +411,27 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 17. Cookies de sessão/refresh têm `httpOnly`, `secure`, `sameSite` configurados?
+### 17. Em projetos serverless / multi-entrypoint, o caminho de produção é o MESMO que o caminho auditado, ou existe um segundo handler (Vercel function, Netlify function, edge worker, Lambda) que duplica a lógica e bypassa as defesas?
+
+> *Pergunta-teste: "Quando audito `server/boot.ts` (ou `app.ts`, `main.ts`) e confirmo que tem CORS, headers, body limit, rate limit — esse arquivo é de fato o que processa as requisições em produção? Ou o `vercel.json` / `netlify.toml` / `serverless.yml` aponta para um handler separado em `api/`, `functions/`, `pages/api/` que reimplementa a rota sem chamar o middleware?"*
+>
+> *Bug clássico de apps híbridos Vite + Vercel, Next.js com Pages Router + App Router, Remix + Lambda, ou qualquer setup onde o dev local roda um servidor "completo" e a produção roda funções serverless. O desenvolvedor mantém duas implementações por conveniência. As defesas perimetrais vivem só no boot completo. Em produção, o tráfego entra pelo handler simplificado e não toca nenhuma defesa. Auditor que lê só `boot.ts` confirma tudo verde — e está errado.*
+>
+> **Opção 1 — Se há duplicação de handler entre dev e produção:**
+> - **CRÍTICO** — anula CORS, headers de segurança, body limit, rate limit, error handler centralizado para o tráfego real
+> - Localizar o entrypoint de produção: ler `vercel.json` (chave `functions`, `rewrites`), `netlify.toml`, `serverless.yml`, `Procfile`, ou a convenção da plataforma (`api/*.ts` no Vercel, `pages/api/*` no Next, `functions/*` no Netlify)
+> - Seguir o handler até o ponto onde middleware é aplicado
+> - **Confirmar que é o mesmo módulo do dev.** Se houver fork, escolher um dos dois caminhos:
+>   - **Consolidar**: o handler serverless apenas importa e re-exporta `boot.ts` via adapter da plataforma (`hono/vercel`, `next-adapter`, etc.). Toda lógica de defesa fica em um lugar só.
+>   - **Aplicar middleware no fork**: se a consolidação for impossível, aplicar exatamente o mesmo middleware no handler serverless e ter teste que valida paridade
+> - Adicionar teste de produção que valida headers/CORS no domínio publicado (`curl -I https://app.exemplo.com/api/...`) — não confiar em "audita o `boot.ts`"
+> - 🔗 *Relacionado: itens 32 (headers), 32 (CSP), 41 (CORS), 35 (rate limit). Este item é a meta-pergunta que valida se todos eles aplicam ao tráfego real.*
+>
+> **Opção 2 — Se há um único entrypoint OU se os múltiplos entrypoints aplicam o mesmo middleware:** ✅ Excelente
+
+---
+
+### 18. Cookies de sessão/refresh têm `httpOnly`, `secure`, `sameSite` configurados?
 
 > **Opção 1 — Se algum está faltando:**
 > - `httpOnly: true` — previne acesso via JavaScript (mitiga XSS)
@@ -424,7 +446,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🟠 ESSENCIAIS — sem isso, não é portfólio sênior
 
-### 18. Existem testes automatizados para os caminhos críticos (auth, autorização, validação)?
+### 19. Existem testes automatizados para os caminhos críticos (auth, autorização, validação)?
 
 > *Não precisa de 100% de cobertura. Precisa de testes que provem que as proteções funcionam.*
 >
@@ -442,9 +464,9 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 19. Existem testes específicos para os cenários de exploração ADVERSARIAL identificados na modelagem de ameaças?
+### 20. Existem testes específicos para os cenários de exploração ADVERSARIAL identificados na modelagem de ameaças?
 
-> *Diferença sutil em relação ao item 18: o 18 garante que existam testes negativos (token inválido, autorização negada). Este item vai além — para cada ameaça documentada no `THREAT_MODEL.md`, existe pelo menos um teste automatizado que prova que a mitigação funciona contra o cenário de ataque específico.*
+> *Diferença sutil em relação ao item 19: o 18 garante que existam testes negativos (token inválido, autorização negada). Este item vai além — para cada ameaça documentada no `THREAT_MODEL.md`, existe pelo menos um teste automatizado que prova que a mitigação funciona contra o cenário de ataque específico.*
 >
 > *Pergunta-teste: "Para cada linha do THREAT_MODEL com status ✅ (mitigado), existe um teste que dispara o ataque e verifica que ele é bloqueado?"*
 >
@@ -466,7 +488,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 20. Existe CI/CD com checks automáticos a cada PR?
+### 21. Existe CI/CD com checks automáticos a cada PR?
 
 > **Opção 1 — Se não:**
 > - Criar `.github/workflows/ci.yml`
@@ -479,7 +501,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 21. Tratamento de erro é centralizado (middleware global) em vez de try/catch repetido em cada controller?
+### 22. Tratamento de erro é centralizado (middleware global) em vez de try/catch repetido em cada controller?
 
 > **Opção 1 — Se cada controller tem try/catch genérico:**
 > - Criar classes de erro: `NotFoundError`, `ForbiddenError`, `ValidationError`, `UnauthorizedError`
@@ -491,9 +513,9 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 22. Os controllers usam `throw` (não `res.status().json()`) para erros operacionais, exercitando o middleware global de erro?
+### 23. Os controllers usam `throw` (não `res.status().json()`) para erros operacionais, exercitando o middleware global de erro?
 
-> *Pergunta-teste: "Se eu remover o middleware global de erro, os endpoints param de retornar 4xx corretos?" — se a resposta for "não, eles continuam funcionando", o middleware está sendo bypassed pelos controllers e o item 21 só existe no papel.*
+> *Pergunta-teste: "Se eu remover o middleware global de erro, os endpoints param de retornar 4xx corretos?" — se a resposta for "não, eles continuam funcionando", o middleware está sendo bypassed pelos controllers e o item 22 só existe no papel.*
 >
 > **Opção 1 — Se controllers ainda retornam erros com `res.status().json()`:**
 > - Refatorar para `throw new ForbiddenError(...)`, `throw new NotFoundError(...)`, etc.
@@ -506,7 +528,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 23. Operações sensíveis estão protegidas contra race conditions / TOCTOU em lógica de negócio?
+### 24. Operações sensíveis estão protegidas contra race conditions / TOCTOU em lógica de negócio?
 
 > *Padrão clássico: "validar saldo → debitar saldo" em dois passos. Dois requests simultâneos passam pela validação antes de qualquer um decrementar → ambos passam, atacante gasta R$ 100 quando só tinha R$ 60. Mesma classe de bug: usar cupom duas vezes simultaneamente, resgatar prêmio limitado em paralelo, exceder quota fazendo N requests ao mesmo tempo, votar duas vezes.*
 >
@@ -527,7 +549,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 24. Logging é estruturado (JSON) e padronizado em 100% do código?
+### 25. Logging é estruturado (JSON) e padronizado em 100% do código?
 
 > *Pergunta-teste: "Há `console.log` ou `console.error` espalhados pelo código?"*
 >
@@ -541,7 +563,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 25. Logs estão LIMPOS de dados sensíveis (senhas, tokens, PII, números de cartão)?
+### 26. Logs estão LIMPOS de dados sensíveis (senhas, tokens, PII, números de cartão)?
 
 > **Opção 1 — Se logs contêm PII ou segredos:**
 > - **CRÍTICO se em produção — logs com PII são vetor de vazamento**
@@ -554,7 +576,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 26. Existe documentação de API (Swagger/OpenAPI ou `API.md` completo)?
+### 27. Existe documentação de API (Swagger/OpenAPI ou `API.md` completo)?
 
 > **Opção 1 — Se não há docs ou só README genérico:**
 > - Gerar OpenAPI a partir do código (zod-to-openapi, tsoa) — preferencial
@@ -565,7 +587,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 27. Existe documento de modelagem de ameaças (`THREAT_MODEL.md`) no repositório?
+### 28. Existe documento de modelagem de ameaças (`THREAT_MODEL.md`) no repositório?
 
 > *Não precisa ser longo. Precisa existir e ser honesto.*
 >
@@ -581,7 +603,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 28. Operações com cota/limite usam mecanismo atômico (`findOneAndUpdate` com filtro, transaction, ou unique constraint) em vez do padrão `count → if → write`?
+### 29. Operações com cota/limite usam mecanismo atômico (`findOneAndUpdate` com filtro, transaction, ou unique constraint) em vez do padrão `count → if → write`?
 
 > *O padrão `count → if → create` é a face mais comum de race condition em apps SaaS. Sempre que houver "verificar limite + executar ação", existe janela de race que rate limiter por IP NÃO fecha — é race no banco, não no front.*
 >
@@ -595,13 +617,13 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - **Unique constraint estratégico** quando aplicável: `UNIQUE(userId, date, slot)` para slots agendados, `UNIQUE(userId, couponId)` para uso único de cupom — o banco recusa a duplicata independente da lógica de aplicação
 > - **Transaction com lock** (último recurso por reduzir throughput): `BEGIN; SELECT FOR UPDATE; ...; COMMIT;` ou Mongo transactions
 > - **Testar com concorrência real**: 50 requests paralelos contra o endpoint — se passa, há race; teste sequencial NÃO pega
-> - 🔗 *Relacionado: item 23 é a regra geral de race conditions; este item é a aplicação cirúrgica em cotas/limites, padrão tão comum que merece checagem dedicada.*
+> - 🔗 *Relacionado: item 24 é a regra geral de race conditions; este item é a aplicação cirúrgica em cotas/limites, padrão tão comum que merece checagem dedicada.*
 >
 > **Opção 2 — Todas as operações de cota são atômicas:** ✅ Excelente
 
 ---
 
-### 29. Existe `SECURITY.md` no repositório?
+### 30. Existe `SECURITY.md` no repositório?
 
 > *Padrão GitHub — aparece automaticamente na aba "Security".*
 >
@@ -616,7 +638,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 30. README é honesto sobre o que está e o que não está implementado?
+### 31. README é honesto sobre o que está e o que não está implementado?
 
 > *Pergunta-teste: "O README promete coisas que o código não entrega?"*
 >
@@ -630,7 +652,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 31. Headers de segurança HTTP estão configurados (Helmet ou equivalente)?
+### 32. Headers de segurança HTTP estão configurados (Helmet ou equivalente)?
 
 > *Teste em https://securityheaders.com*
 >
@@ -646,7 +668,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 32. A CSP em produção é estrita (sem `'unsafe-inline'` ou `'unsafe-eval'` em `script-src`), ou foi relaxada para fazer o framework funcionar?
+### 33. A CSP em produção é estrita (sem `'unsafe-inline'` ou `'unsafe-eval'` em `script-src`), ou foi relaxada para fazer o framework funcionar?
 
 > *`'unsafe-inline'` em `script-src` anula a principal proteção XSS do CSP. Frameworks modernos (Vite, Next.js, Nuxt) suportam nonces ou hashes — relaxar pra `'unsafe-inline'` é atalho que vira teatro de segurança.*
 >
@@ -669,7 +691,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🟡 QUALIDADE — visível para quem audita
 
-### 33. IDs nas validações têm formato estrito (regex/UUID)?
+### 34. IDs nas validações têm formato estrito (regex/UUID)?
 
 > *`z.string().min(1)` aceita qualquer string e pode mascarar erros.*
 >
@@ -683,7 +705,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 34. Existe paginação em todas as listagens que podem crescer?
+### 35. Existe paginação em todas as listagens que podem crescer?
 
 > **Opção 1 — Se há endpoints `GET /resource` retornando array completo:**
 > - Implementar paginação por cursor (preferencial) ou offset
@@ -695,7 +717,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 35. Endpoints sensíveis têm rate limiting POR USUÁRIO (não só por IP)?
+### 36. Endpoints sensíveis têm rate limiting POR USUÁRIO (não só por IP)?
 
 > *Rate limit por IP falha atrás de NAT corporativo (um IP = mil usuários).*
 >
@@ -708,7 +730,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 36. Quando a aplicação está atrás de proxy/load balancer/CDN, o IP do cliente usado para rate limit, audit log e bloqueios é confiável (não-fakeável por header de origem)?
+### 37. Quando a aplicação está atrás de proxy/load balancer/CDN, o IP do cliente usado para rate limit, audit log e bloqueios é confiável (não-fakeável por header de origem)?
 
 > *Pergunta-teste: "Eu mando `curl -H 'X-Forwarded-For: 1.2.3.4' https://meusite/login` várias vezes — o rate limit conta cada request como vindo de IP diferente?" Se sim, o rate limit é teatro: atacante drible em 1 linha de bash.*
 >
@@ -724,13 +746,13 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - Em Express: `app.set('trust proxy', N)` com N correto — não `true` (confia em qualquer proxy) nem `false` (ignora completamente).
 > - Em FastAPI/Starlette: usar `ProxyHeadersMiddleware` configurado com `trusted_hosts`.
 > - **Teste de validação obrigatório**: mandar header forjado e verificar que ele é IGNORADO (não que ele seja aceito).
-> - 🔗 *Relacionado: item 35 (rate limit por usuário). Sem 36, qualquer rate limit por IP é placebo atrás de proxy.*
+> - 🔗 *Relacionado: item 36 (rate limit por usuário). Sem 36, qualquer rate limit por IP é placebo atrás de proxy.*
 >
 > **Opção 2 — IP confiável vem do header certo, ou de `REMOTE_ADDR` direto sem proxy:** ✅ Excelente
 
 ---
 
-### 37. Política de senha é forte (mínimo 8, idealmente verificada contra senhas vazadas)?
+### 38. Política de senha é forte (mínimo 8, idealmente verificada contra senhas vazadas)?
 
 > **Opção 1 — Se senha mínima é < 8 ou sem checagem de vazamento:**
 > - Aumentar mínimo para 10 caracteres (NIST recomenda 8, idealmente mais)
@@ -741,7 +763,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 38. Existem health checks separando "vivo" (liveness) de "pronto" (readiness)?
+### 39. Existem health checks separando "vivo" (liveness) de "pronto" (readiness)?
 
 > **Opção 1 — Se há só um health check genérico ou nenhum:**
 > - `GET /health/live` — processo está respondendo (sempre 200 se app não travou)
@@ -752,7 +774,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 39. Não há queries N+1 nas listagens principais?
+### 40. Não há queries N+1 nas listagens principais?
 
 > *Pergunta-teste: "Para listar 100 itens, quantas queries ao banco são feitas?"*
 >
@@ -765,7 +787,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 40. Tratamento de erro nunca vaza stack trace ou detalhes internos em produção?
+### 41. Tratamento de erro nunca vaza stack trace ou detalhes internos em produção?
 
 > **Opção 1 — Se em produção o cliente vê stack trace ou nomes de tabela:**
 > - **CRÍTICO se em produção — vazamento de informação**
@@ -778,7 +800,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 41. CORS está configurado com allowlist específica (não wildcard `*`)?
+### 42. CORS está configurado com allowlist específica (não wildcard `*`)?
 
 > **Opção 1 — Se CORS usa `*` ou é permissivo:**
 > - Configurar `origin` como função que valida contra allowlist
@@ -790,7 +812,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 42. Há proteção contra CSRF para endpoints que aceitam cookies de autenticação?
+### 43. Há proteção contra CSRF para endpoints que aceitam cookies de autenticação?
 
 > *Se usa apenas `Authorization: Bearer` no header, risco é menor. Se usa cookies, atenção.*
 >
@@ -803,7 +825,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 43. Dependências estão atualizadas e auditadas?
+### 44. Dependências estão atualizadas e auditadas?
 
 > **Opção 1 — Se `npm audit` mostra vulnerabilidades altas/críticas:**
 > - Rodar `npm audit fix` (ou equivalente em outras linguagens)
@@ -817,7 +839,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🟢 DIFERENCIAÇÃO — separa sênior bom de sênior excelente
 
-### 44. Há correlation ID propagado por requisição (HTTP, logs, eventos assíncronos)?
+### 45. Há correlation ID propagado por requisição (HTTP, logs, eventos assíncronos)?
 
 > **Opção 1 — Se não:**
 > - Gerar `requestId` (UUID) em middleware no início de cada request
@@ -830,7 +852,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 45. Existem métricas/telemetria expostas (Prometheus, OpenTelemetry, APM)?
+### 46. Existem métricas/telemetria expostas (Prometheus, OpenTelemetry, APM)?
 
 > **Opção 1 — Se não há métricas:**
 > - Adicionar Prometheus (`prom-client`) ou OpenTelemetry
@@ -842,7 +864,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 46. Operações destrutivas usam soft delete em vez de hard delete?
+### 47. Operações destrutivas usam soft delete em vez de hard delete?
 
 > **Opção 1 — Se `DELETE` apaga registros para sempre:**
 > - Adicionar campo `deletedAt: Date | null` nos schemas
@@ -854,7 +876,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 47. Existe audit log para ações sensíveis (login, logout, convite, exclusão, mudança de permissão)?
+### 48. Existe audit log para ações sensíveis (login, logout, convite, exclusão, mudança de permissão)?
 
 > **Opção 1 — Se não há registro de ações sensíveis:**
 > - Criar tabela/coleção `audit_logs`
@@ -867,7 +889,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 48. Existe plano de backup e recuperação documentado?
+### 49. Existe plano de backup e recuperação documentado?
 
 > **Opção 1 — Se não há `DISASTER_RECOVERY.md`:**
 > - Criar `docs/DISASTER_RECOVERY.md`
@@ -885,7 +907,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 49. Política de retenção de dados está definida (especialmente para LGPD/GDPR)?
+### 50. Política de retenção de dados está definida (especialmente para LGPD/GDPR)?
 
 > **Opção 1 — Se não há política definida:**
 > - Documentar em `docs/DATA_RETENTION.md`:
@@ -900,7 +922,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 50. Aplicação está containerizada com Dockerfile multi-stage?
+### 51. Aplicação está containerizada com Dockerfile multi-stage?
 
 > **Opção 1 — Se não há Docker ou só Dockerfile simples:**
 > - Dockerfile multi-stage: builder (com toolchain) + runtime (mínimo)
@@ -913,7 +935,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 51. Há decisões arquiteturais documentadas (ADRs — Architecture Decision Records)?
+### 52. Há decisões arquiteturais documentadas (ADRs — Architecture Decision Records)?
 
 > *Sênior documenta por que escolheu X em vez de Y.*
 >
@@ -933,7 +955,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ## 🎨 FRONTEND — checks específicos do cliente
 
-### 52. Onde o access token (JWT) é armazenado no frontend?
+### 53. Onde o access token (JWT) é armazenado no frontend?
 
 > **Opção 1 — Se está em `localStorage` ou `sessionStorage`:**
 > - **Vulnerável a XSS** — qualquer script consegue ler
@@ -943,13 +965,13 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 >   - `sameSite: 'strict'` (ou `'lax'` se houver navegação cross-site legítima)
 >   - Validar header `Origin`/`Referer` no `/refresh`
 >   - Para apps mais expostos: double-submit token ou anti-CSRF token
->   - 🔗 *Ver item 42 — CSRF é a contrapartida do trade-off "cookie httpOnly vs localStorage"*
+>   - 🔗 *Ver item 43 — CSRF é a contrapartida do trade-off "cookie httpOnly vs localStorage"*
 >
 > **Opção 2 — Se está em memória ou cookie httpOnly COM proteção CSRF:** ✅ Excelente
 
 ---
 
-### 53. O guard de rota do frontend valida o token de verdade (decode + verificação de expiração + opcionalmente assinatura), ou apenas verifica `if (token)` — permitindo bypass com `localStorage.setItem('token','x')` no console?
+### 54. O guard de rota do frontend valida o token de verdade (decode + verificação de expiração + opcionalmente assinatura), ou apenas verifica `if (token)` — permitindo bypass com `localStorage.setItem('token','x')` no console?
 
 > *Pergunta-teste: "Eu abro o console no site em produção, digito `localStorage.setItem('app_token','qualquer_string')` e dou refresh — consigo entrar na área protegida?" Se a resposta for sim, o guard é cosmético.*
 >
@@ -972,13 +994,13 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - **Nunca** comparar token contra string literal hardcoded (`token === 'demo_token'`)
 > - Se houver "modo demo" intencional, isolar em rota separada (`/demo`) com dados sintéticos próprios — não usar o `ProtectedRoute` real
 > - Adicionar teste E2E: "console.log + localStorage.setItem + navigate(/dashboard) → redireciona pra login"
-> - 🔗 *Relacionado: item 52 (onde o token é armazenado). 52 cobre o local; 53 cobre se o guard realmente valida o que está nesse local.*
+> - 🔗 *Relacionado: item 53 (onde o token é armazenado). 52 cobre o local; 53 cobre se o guard realmente valida o que está nesse local.*
 >
 > **Opção 2 — Se o guard valida o token de verdade:** ✅ Excelente
 
 ---
 
-### 54. Conteúdo fornecido por usuário é sanitizado antes de renderizar como HTML?
+### 55. Conteúdo fornecido por usuário é sanitizado antes de renderizar como HTML?
 
 > *Aplica-se a campos como `description`, `bio`, `comment`, qualquer texto renderizado.*
 >
@@ -992,7 +1014,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 55. CSP está configurada também no servidor que entrega o frontend (Vercel/Netlify/etc)?
+### 56. CSP está configurada também no servidor que entrega o frontend (Vercel/Netlify/etc)?
 
 > **Opção 1 — Se CSP só está no backend da API:**
 > - Configurar headers no `vercel.json`, `_headers` (Netlify), ou Nginx
@@ -1003,7 +1025,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 56. Erros do backend são tratados sem expor detalhes técnicos ao usuário?
+### 57. Erros do backend são tratados sem expor detalhes técnicos ao usuário?
 
 > **Opção 1 — Se UI mostra stack trace ou mensagens cruas do backend:**
 > - Adicionar boundary de erro (React Error Boundary)

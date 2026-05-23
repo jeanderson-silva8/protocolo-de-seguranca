@@ -100,20 +100,21 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | 56 | Erros do backend tratados sem expor detalhes |
 | 57 | Nenhum segredo vaza para o bundle público do frontend |
 
-### 🧭 META — disciplina de cobertura (59-60)
+### 🧭 META — disciplina de cobertura (59-61)
 
-> *Itens "meta" que verificam se as defesas listadas acima foram aplicadas com consistência. Adicionados após a peer review do Organiza (v1.9.0) — onde uma defesa correta em `tasks.js` não foi replicada em `auth.js/reset-password`, e um endpoint sensível (reset-password) ficou completamente sem teste adversarial enquanto outros tinham 13.*
+> *Itens "meta" que verificam se as defesas listadas acima foram aplicadas com consistência. Originados de peer reviews que pegaram **defesas declaradas mas não entregues** em produção ou em parte dos endpoints.*
 
 | # | Pergunta |
 |---|----------|
 | 58 | Toda função que recebe ID externo valida o formato ANTES do banco — em **todos** os pontos, não só em alguns |
 | 59 | Cada endpoint **destrutivo/sensível** tem ao menos um teste adversarial **dedicado àquele endpoint** |
+| 60 | Existe **smoke test automatizado em CI** que valida defesas críticas na **URL pública pós-deploy**, não só no commit local |
 
 ---
 
 ## 🔄 Nota de migração — numeração
 
-> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. Na primeira renumeração (v1.2.0), a numeração foi compactada para sequencial 1-56. Após a auditoria do TrendScope (v1.5.0), shift adicional levou a **sequencial 1-57** com a inserção do item 17 novo (serverless/multi-entrypoint) entre os antigos 16 (SSTI) e 17 (cookies). Após a auditoria do Organiza (v1.8.0), o **item 58** (segredos vazando para o bundle do frontend) foi adicionado ao final da seção 🎨 FRONTEND — sem shift, pois entrou como último item. Na sequência, a peer review do mesmo projeto (v1.9.0) trouxe os **itens 59 e 60** ("meta" — consistência de validação de ID em todos os pontos, e teste adversarial dedicado por endpoint sensível) numa banda nova 🧭 META no final do documento — também sem shift. A numeração atual é **sequencial 1-60**.
+> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. Na primeira renumeração (v1.2.0), a numeração foi compactada para sequencial 1-56. Após a auditoria do TrendScope (v1.5.0), shift adicional levou a **sequencial 1-57** com a inserção do item 17 novo (serverless/multi-entrypoint) entre os antigos 16 (SSTI) e 17 (cookies). Após a auditoria do Organiza (v1.8.0), o **item 58** (segredos vazando para o bundle do frontend) foi adicionado ao final da seção 🎨 FRONTEND — sem shift, pois entrou como último item. Na sequência, a peer review do mesmo projeto (v1.9.0) trouxe os **itens 59 e 60** ("meta" — consistência de validação de ID em todos os pontos, e teste adversarial dedicado por endpoint sensível) numa banda nova 🧭 META no final do documento — também sem shift. Depois, a peer review do Miniatura Forja AI (v1.10.0) trouxe o **item 61** (smoke test pós-deploy validando defesas na URL pública) à mesma banda META. A numeração atual é **sequencial 1-61**.
 >
 > **Relatórios de auditoria publicados antes do shift usam a nomenclatura antiga.** Mapa de equivalência consolidado (sufixo antigo → número atual 1-57):
 >
@@ -1159,6 +1160,59 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - 🔗 *Relacionado: item 19 (testes adversariais em geral) e item 20 (teste por ameaça do THREAT_MODEL). Item 60 é a versão "por endpoint" — corta a mesma cobertura por um eixo diferente para revelar lacunas.*
 >
 > **Opção 2 — Se cada endpoint sensível tem ao menos um teste adversarial específico dele:** ✅ Excelente
+
+---
+
+### 61. Existe **smoke test automatizado em CI** que valida que as defesas críticas estão ATIVAS na URL pública pós-deploy, não apenas no commit local?
+
+> *Esse item nasce empiricamente da auditoria do Miniatura Forja AI: a v1 (paranoica) marcou 12 correções como ✅ no commit local; a v2 (comparativa) abriu a URL ao vivo com `curl` e descobriu que **zero** das correções estava em produção — o webhook GitHub→Vercel apontava para o repositório antigo. O código estava perfeito. A defesa não estava executando.*
+>
+> *Auditar o repositório ≠ auditar o produto. Para o atacante, só importa o código que serve a request real.*
+>
+> *Pergunta-teste: "Se eu mudar a configuração de deploy (webhook, branch, environment, projeto Vercel/Netlify/etc) sem alterar o código, alguma coisa **falha automaticamente em CI**, ou eu só descubro fazendo `curl` manual depois?"*
+>
+> *Esse item é a versão "post-deploy" do item 17. O 17 pergunta "código de prod = código auditado?". O 61 pergunta "**alguém ainda está verificando isso depois que eu mudar a config?**".*
+>
+> **O que conta como smoke test:**
+> - Job de CI que roda **APÓS** o deploy (deployment hook, cron, ou `needs: deploy` no GitHub Actions)
+> - Que faz `curl` contra a **URL pública** (não localhost, não preview)
+> - Que verifica pelo menos:
+>   - Headers de segurança críticos presentes (CSP, HSTS, X-Frame-Options) — confirma `vercel.json` / equivalente está sendo aplicado
+>   - Endpoints sensíveis rejeitam input adversarial — `Origin: https://evil.com` → 403, body inválido → 400, sem auth em rota privada → 401
+>   - Bundle público não contém padrões de segredo (`grep` por `sk_*`, `AKIA*`, etc — já é item 58)
+>   - Versão do código está correta (algum hash do bundle, ou string canária que só existe na versão atual)
+>
+> **O que NÃO conta:**
+> - Teste local em `dev` antes do push — esse é "teste pré-deploy", não fecha o vetor
+> - Smoke test que roda só uma vez na hora do deploy mas não em PR/push subsequentes — cria janela cega
+> - Smoke test que valida só o frontend mas não a API (ou vice-versa)
+>
+> **Opção 1 — Se "corrigido" significa apenas "merged" sem validação na URL pública:**
+> - Adicionar job de CI **pós-deploy**. Exemplo para GitHub Actions:
+>   ```yaml
+>   smoke-test-prod:
+>     needs: deploy   # ou: if: github.ref == 'refs/heads/main'
+>     runs-on: ubuntu-latest
+>     steps:
+>       - name: Aguarda propagação
+>         run: sleep 60
+>       - name: Headers de segurança presentes
+>         run: |
+>           HEADERS=$(curl -sS -I https://meusite.com/)
+>           echo "$HEADERS" | grep -qi 'content-security-policy' || exit 1
+>           echo "$HEADERS" | grep -qi 'x-frame-options' || exit 1
+>       - name: CORS bloqueante
+>         run: |
+>           STATUS=$(curl -sS -o /dev/null -w '%{http_code}' \
+>             -X POST -H 'Origin: https://evil.com' \
+>             https://meusite.com/api/sensitive)
+>           [ "$STATUS" = "403" ] || exit 1
+>   ```
+> - Para hosting com deploy webhook (Vercel, Netlify): configurar webhook que dispara o smoke test em vez de depender de cron
+> - Falha do smoke test → alerta (Slack/email) + idealmente rollback automatizado para a versão anterior
+> - 🔗 *Relacionado: itens 17 (paridade dev/prod no código), 58 (segredo no bundle), 21 (CI básico de cada PR). Este item é o último guarda — verifica que tudo que veio antes está EXECUTANDO.*
+>
+> **Opção 2 — Se há smoke test automatizado validando defesas críticas na URL pública pós-deploy:** ✅ Excelente
 
 ---
 

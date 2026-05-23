@@ -9,6 +9,91 @@
 
 ---
 
+## [1.9.0] — 2026-05-22 (peer review do Organiza)
+
+### Adicionado
+- **Item 59 — "Toda função que recebe ID externo valida o formato ANTES do banco — em TODOS os pontos, não só em alguns"** na banda nova 🧭 META.
+  - Origem: a auditoria do Organiza corrigiu `mongoose.Types.ObjectId.isValid` em `routes/tasks.js` (PUT e DELETE) mas esqueceu o **mesmo padrão** em `routes/auth.js` → `reset-password/:id/:token`. ID malformado virava `CastError` → 500. A peer review pegou; a 1ª passada interna não.
+  - Categoria: **inconsistência de correção** — não é "achado novo", é "achado antigo aplicado em parte dos pontos". Padrão difícil de pegar em code review unitário porque o reviewer foca no diff; precisa de auditoria por classe de bug.
+- **Item 60 — "Cada endpoint destrutivo/sensível tem ao menos um teste adversarial DEDICADO àquele endpoint"** na banda 🧭 META.
+  - Origem: a 1ª passada da auditoria do Organiza adicionou 24 testes adversariais (incluindo `alg:none` rejeitado, IDOR, anti-enumeração), mas **zero** cobriam `reset-password/:id/:token` — endpoint que troca a senha do usuário com ID + token da URL. A peer review notou: "compartilhar mitigação com `/auth/*` ≠ ter teste que prova". Resultado: 9 testes novos só para `reset-password` (caminho feliz, ID malformado, ID inexistente, senha fraca, `alg:none`, expirado, token sem `+user.password`, cross-id, reuso após troca).
+  - Categoria: **cobertura desigual** — 13 testes em login, 0 em reset-password. Endpoints com maior poder de causar dano costumam ser os menos testados.
+- Banda nova 🧭 META no final do checklist, abrigando itens que verificam **disciplina de cobertura** das defesas listadas nas bandas anteriores. Sem shift — itens 59 e 60 entraram no final, numeração agora **sequencial 1-60**.
+
+### Aplicado em projeto real (Organiza, mesma data)
+- `backend/routes/auth.js` — `mongoose.Types.ObjectId.isValid` adicionado no `reset-password` (mesmo padrão do `tasks.js`, agora consistente).
+- `backend/server.js` — `credentials: false` no CORS (auth via Bearer, sem cookie; `credentials: true` era permissão sem uso).
+- `docs/adr/ADR-002` — nota explicando por que o `reset-password` compartilha o `authLimiter` em vez de ter limiter dedicado (256 bits de entropia do token + `authLimiter` apertado de 5/min cobrem o risco).
+- `backend/tests/auth.test.js` — 9 testes adversariais novos para `reset-password` (suíte total: 24 → 33 testes, todos verdes).
+- Estrutura dos testes refatorada (file-level hooks em vez de per-describe) para suportar múltiplos `describe` no mesmo arquivo sem reconexão Mongo.
+
+### Lições meta documentadas
+1. **"Resolvido em um lugar" não é "resolvido".** O item 59 nasce dessa lição: a correção do `ObjectId.isValid` em `tasks.js` foi aplicada com cuidado mas não replicada em `auth.js`. Auditoria por classe de bug ("onde mais se aplica isso?") pega; auditoria por arquivo não.
+2. **Cobertura de testes precisa de eixo "por endpoint", não só "por categoria".** Suíte adversarial é assimétrica por natureza — gravita pros endpoints mais óbvios (login). Forçar contagem "testes por endpoint sensível" revela a lacuna.
+3. **Peer review continua agregando valor mesmo no modo paranoico.** Terceira vez consecutiva (Lumina v2 → originou paranoico, TrendScope → originou item 17 + matriz obrigatória, Organiza → originou itens 59 e 60). A lição é estrutural: a 2ª passada do mesmo auditor pega ~95%; olho fresco humano pega o ~5% que vinha da fadiga ou foco do auditor.
+
+---
+
+## [1.8.0] — 2026-05-22
+
+### Adicionado
+- **Item 58 — "Nenhum segredo vaza para o bundle público do frontend"** na seção 🎨 FRONTEND do `AUDIT_CHECKLIST.md`. Numeração agora **sequencial 1-58**, sem shift (entrou como último item).
+  - Cobre o vetor distinto do item 13: um segredo pode estar corretamente fora do git (`.env` no `.gitignore`) e **ainda assim** chegar ao navegador do usuário, embutido no bundle JavaScript.
+  - Vetores cobertos: prefixos de exposição do bundler (`VITE_*`, `NEXT_PUBLIC_*`, `REACT_APP_*`, `PUBLIC_*`, `EXPO_PUBLIC_*`); segredo hardcoded em componente; import indevido de código de servidor no cliente; source maps de produção; chamada direta do browser a API de terceiro com chave secreta.
+  - Pergunta-teste: `grep` de padrões de segredo no diretório de build (`dist/`, `.next/`, `build/`) + inspeção do JS no DevTools do site publicado.
+  - Trio do ciclo de vida do segredo agora completo: **13** (não está no repositório) · **6** (existe quando o servidor sobe) · **58** (não escapa para o navegador).
+
+### Origem
+- Auditoria do **Organiza** (`organiza-dashboard-full`, MERN, modo paranoico, 2026-05-22). Durante a auditoria, a verificação "alguma `VITE_*` carrega valor sensível?" foi feita de forma **ad hoc** (no Organiza, `api.js` só usa `VITE_API_URL` — uma URL, sem segredo) — e o relatório do Nexus Portal já havia checado source maps também de forma pontual. O autor notou que nenhum item do checklist **obrigava** essa verificação: o item 13 olha o histórico do git, não o que chega ao browser. Lacuna real → item novo.
+
+### Lições meta documentadas
+1. **"Está no `.env`" não significa "está seguro".** O `.env` protege contra o repositório, não contra o build. Bundlers de frontend embutem por design qualquer variável com o prefixo de exposição — e esse JS é público.
+2. **Verificação feita ad hoc em duas auditorias seguidas = sinal de item faltando.** Quando o auditor checa algo "por iniciativa" repetidamente, o checklist deveria estar obrigando — caso contrário a próxima auditoria pode esquecer.
+
+---
+
+## [1.7.0] — 2026-05-18
+
+### Adicionado
+- **Peer review externa do TrendScope** (após as 10 sessões de correção) identificou 1 crítico novo + 3 médios que escaparam às passadas internas (padrão + cobertura completa):
+  - **C20** — SSRF em `fetchOgImage`: função fazia `fetch(targetUrl)` onde `targetUrl` vem de resultado da API Serper. Não é input direto do usuário, mas vem de fonte externa — atacante via supply chain (Serper comprometida ou SEO poisoning) pode forçar fetch para AWS metadata, loopback, RFC1918. Auditor interno minimizou ("já em C10 v1") em vez de classificar como crítico próprio.
+  - Refinamento ao **ADR-003**: documentação de "cold start = burst window" em rate limit serverless (não só escala horizontal).
+  - **ADR-004 novo**: formalização de `'unsafe-inline'` em `script-src` como dívida com gatilhos objetivos (mesmo padrão do Lumina ADR-003).
+  - Fechamento do **item 39** (split `/api/health/live` + `/api/health/ready`).
+
+### Mudado
+- **Item 15 (SSRF) expandido** no `AUDIT_CHECKLIST.md`: cobertura explícita de "URL vem de API externa, não direto do usuário" — supply chain SSRF via search results, webhooks de parceiro, feeds RSS, OpenGraph preview. A palavra "userInput" do texto antigo sugeria restritivamente input direto; nova versão deixa explícito que API externa conta também.
+- **Item 36 (rate limit por usuário) expandido**: nuance "cold start = burst window pós-cold-start" em serverless. Não é só problema de escala horizontal — é problema imediato single-instance também. Pergunta-teste serverless adicionada.
+- **Convenção reforçada**: refinamento de classe existente vira **expansão do item**, NÃO item novo. Inflar a contagem só pra refinar gera ruído. Item 15 e 36 ganharam parágrafos novos; numeração 1-57 permanece.
+
+### Origem
+- Peer review externa (humano com olho fresco) do TrendScope após as 10 sessões de correção. **Segunda vez** em projetos auditados aqui que peer review pega crítico onde a auditoria interna minimizou (primeira foi Lumina v2 → originou o modo paranoico). Reforça empiricamente: peer review externa **não é "extra"**, é parte do método para projetos que importam.
+
+### Lições meta documentadas
+1. **"Aplica-se a:" do checklist precisa ser generoso, não restritivo.** Item 15 dizia "qualquer feature em que o backend faz `fetch(userInput)`" — palavra "userInput" sugeriu ao auditor que API externa não conta. Agora explícito.
+2. **Mesmo paranoico precisa de olho fresco.** Auto-revisão pega ~95%; peer review pega o ~5% restante onde o auditor minimizou de boa fé. Em projetos críticos: paranoico + peer review humano = 99%.
+
+---
+
+## [1.6.1] — 2026-05-18
+
+### Adicionado
+- **Padrão de README pós-auditoria** documentado em `WORKFLOW.md` (seção nova entre v2 comparativa e Regras inegociáveis). Dois sub-padrões:
+  - **Padrão A** (projetos sem auth complexa) — 1 seção `🔒 Segurança — camadas e status` com `<a id="seg-camadas">` (tabela + "O que NÃO está implementado"). Exemplos: TrendScope, Lumina.
+  - **Padrão B** (projetos com auth complexa: login + refresh + sockets/multi-tenant/convites) — **2 seções** linkadas via anchors explícitos: `seg-camadas` (tabela) + `arq-auth` (6-8 etapas narrativas explicando o encadeamento contra XSS/CSRF/IDOR/spoofing/roubo de token). Exemplos: BrieflyAI, FlowSnyker.
+- Regra de **anchors explícitos** (`<a id="seg-camadas">`, `<a id="arq-auth">`, `<a id="arq-auth-ws">`, etc.) em vez de slugs automáticos do GitHub. Emojis + em-dashes + acentos + parênteses no header quebram o slug automático em alguns parsers. Anchor explícito é HTML invisível e funciona em 100%.
+- Tabela "quando aplicar qual padrão" mapeando stack → padrão A ou B.
+- Referência cruzada no `PROMPT_AUDITORIA.md` e `PROMPT_AUDITORIA_PARANOICO.md` apontando para a seção do WORKFLOW.
+
+### Mudado
+- BrieflyAI e FlowSnyker READMEs migrados pro padrão novo: header da Segurança virou "Segurança — camadas e status" + anchor `<a id="seg-camadas">`; header da Auth virou "Arquitetura de Auth — como o fluxo resiste a [vetores] (o porquê e o encadeamento)" + anchor `<a id="arq-auth">` (BrieflyAI) ou `<a id="arq-auth-ws">` (FlowSnyker).
+- FlowSnyker README expandido: seção "Arquitetura de Auth + WebSocket" agora tem 6 etapas explicando o encadeamento contra IDOR via socket (versão anterior tinha 3 etapas só sobre convites).
+
+### Origem
+- Pergunta direta do mantenedor: "é coerente deixar essas duas áreas de segurança no BrieflyAI?". Resposta: sim, mas é necessário diferenciar tabela (o que existe) de narrativa (por que assim), e padronizar pra outros projetos. Esse loop "pergunta → padronização" é o ciclo que vem evoluindo o framework desde a v1.0.
+
+---
+
 ## [1.6.0] — 2026-05-18
 
 ### Adicionado

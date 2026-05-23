@@ -154,6 +154,96 @@ Se você é o autor das correções, peça pra outra pessoa (humano ou outra ins
 
 ---
 
+## 📐 Padrão de README pós-auditoria
+
+Após cada auditoria, o README do projeto auditado precisa refletir a postura real. Dois padrões estabelecidos:
+
+### Padrão A — Projetos SEM auth complexa (demo, MVP simples)
+
+Apenas **1 seção de segurança** — a tabela de camadas com âncora no código:
+
+```markdown
+<a id="seg-camadas"></a>
+## 🔒 Segurança — camadas e status
+
+> *Tabela scannável: o que existe em cada camada, com âncora no código.*
+
+| Camada | Implementação | Status |
+|---|---|---|
+| [linha por camada com arquivo:linha] | | ✅ / 🟠 / 🔴 |
+
+**O que NÃO está implementado:**
+- [lista honesta — auth, MFA, etc. — com link para ADR quando há decisão consciente]
+```
+
+**Exemplos no histórico:**
+- [TrendScope](../Projeto_google/README.md) — sem auth (ADR-002), só tabela
+- [Lumina](../Lumina-Booking-SaaS/README.md) — auth básica sem refresh rotation, só tabela
+
+### Padrão B — Projetos COM auth complexa (login + refresh + sockets/multi-tenant/convites)
+
+**2 seções complementares**, linkadas via âncoras explícitas:
+
+```markdown
+<a id="seg-camadas"></a>
+## 🔒 Segurança — camadas e status
+
+> *Tabela scannável: o que existe em cada camada, com âncora no código. Para entender o **encadeamento** de auth, ver a seção [Arquitetura de Auth](#arq-auth) abaixo.*
+
+| Camada | Implementação | Status |
+|---|---|---|
+| [linha por camada com arquivo:linha] | | ✅ |
+
+**O que NÃO está implementado:**
+- [lista honesta]
+
+---
+
+<a id="arq-auth"></a>
+## 🔒 Arquitetura de Auth — como o fluxo resiste a [vetores específicos cobertos: XSS / CSRF / IDOR / spoofing / roubo de token] (o porquê e o encadeamento)
+
+> *Deep-dive narrativo: por que cada peça existe e como elas se encadeiam. A tabela [Segurança — camadas e status](#seg-camadas) acima lista o **que** existe; esta seção explica **por que** assim.*
+
+1. **[Etapa 1 — peça do fluxo]:** [o que faz, por que existe, contra qual vetor]
+2. **[Etapa 2]:** [...]
+3. **[Etapa 3]:** [...]
+4. **[Etapa 4]:** [...]
+5. **[Etapa 5]:** [...]
+6. **[Etapa 6]:** [...]
+
+> **Lição meta (auditoria vN, se houver):** [bug sutil que ESTA seção previne — apontando pro item correspondente do checklist universal]
+```
+
+**Total: 6-8 etapas narrativas.** Cada etapa cobre 1 peça do fluxo de auth, conectando o **que** ao **porquê** (qual vetor de ataque ela fecha).
+
+**Exemplos no histórico:**
+- [BrieflyAI](../PJ-BrieflyAI/README.md) — JWT em memória + refresh httpOnly + rotation + family revoke → XSS/CSRF/roubo de token
+- [FlowSnyker](../FlowSnyker/README.md) — auth + WebSocket: `socket.userId` imutável após handshake + validação por handler → IDOR via socket spoofing
+
+### Quando aplicar qual padrão
+
+| Tem... | Use padrão |
+|--------|-----------|
+| Auth completa (login + refresh + revogação) | **B** |
+| Auth + WebSocket / Socket.io | **B** (com seção "Auth + WebSocket") |
+| Auth + Multi-tenant | **B** (com seção "Auth + Multi-tenant") |
+| Auth + Convites/compartilhamento | **B** (com seção "Auth + Compartilhamento") |
+| Só search público (sem auth) | **A** |
+| Demo de portfólio sem features de auth | **A** |
+| Apenas API key estática | **A** (a API key vira 1 linha na tabela) |
+
+### Por que anchors explícitos `<a id="...">` em vez de auto-anchors do GitHub
+
+Headers com emojis (🔒), em-dashes (—), parênteses, acentos e vírgulas geram anchors imprevisíveis no slug automático do GitHub — diferentes versões do parser/preview produzem slugs diferentes. **Anchor explícito `<a id="seg-camadas"></a>` é HTML invisível e funciona em 100% dos parsers Markdown.**
+
+Padrão de naming (curto, descritivo, sem acento):
+- `seg-camadas` — Segurança / tabela de camadas
+- `arq-auth` — Arquitetura de Auth genérica
+- `arq-auth-ws` — Arquitetura de Auth + WebSocket
+- `arq-auth-tenant` — Arquitetura de Auth + Multi-tenant
+
+---
+
 ## 📏 Regras inegociáveis (não negocie nem com você mesmo)
 
 1. **Honestidade > marketing.** Relatório honesto sobre o que falta vale mais que relatório elogioso. Recrutador valoriza.

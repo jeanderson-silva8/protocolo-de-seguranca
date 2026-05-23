@@ -99,6 +99,16 @@ Se não há nenhuma, escreva: "nenhuma — me pergunte se encontrar algo que par
 
 ## Após entregar a auditoria
 Se o autor (eu) corrigir os bugs depois, eu vou voltar a você pedindo uma **auditoria v2 comparativa** (padrão FlowSnyker v2 / Lumina v2). Não corrija nada AGORA — a v1 documenta o estado atual sem alterações.
+
+## Padrão de README pós-auditoria (sugerir quando for atualizar README do projeto)
+Ver seção "📐 Padrão de README pós-auditoria" do `WORKFLOW.md`. Resumo:
+
+- **Projeto SEM auth complexa** → 1 seção `🔒 Segurança — camadas e status` (tabela + "O que NÃO está implementado") com `<a id="seg-camadas">`.
+- **Projeto COM auth complexa** (login + refresh + sockets / multi-tenant / convites) → **2 seções**:
+  - `🔒 Segurança — camadas e status` (`<a id="seg-camadas">`) — tabela
+  - `🔒 Arquitetura de Auth — como o fluxo resiste a [vetores] (o porquê e o encadeamento)` (`<a id="arq-auth">`) — 6-8 etapas narrativas
+
+Sempre **anchors explícitos** (`<a id="...">`) em vez de slugs automáticos do GitHub — emojis/em-dashes/acentos quebram auto-anchor.
 ```
 
 ---

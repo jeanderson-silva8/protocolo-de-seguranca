@@ -89,7 +89,7 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | 50 | Dockerfile multi-stage |
 | 51 | ADRs documentando decisões |
 
-### 🎨 FRONTEND (53-57) — específico de cliente
+### 🎨 FRONTEND (53-58) — específico de cliente
 
 | # | Pergunta |
 |---|----------|
@@ -98,12 +98,22 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 | 54 | Conteúdo do usuário sanitizado antes de renderizar HTML |
 | 55 | CSP configurada também no servidor do frontend (Vercel/Netlify) |
 | 56 | Erros do backend tratados sem expor detalhes |
+| 57 | Nenhum segredo vaza para o bundle público do frontend |
+
+### 🧭 META — disciplina de cobertura (59-60)
+
+> *Itens "meta" que verificam se as defesas listadas acima foram aplicadas com consistência. Adicionados após a peer review do Organiza (v1.9.0) — onde uma defesa correta em `tasks.js` não foi replicada em `auth.js/reset-password`, e um endpoint sensível (reset-password) ficou completamente sem teste adversarial enquanto outros tinham 13.*
+
+| # | Pergunta |
+|---|----------|
+| 58 | Toda função que recebe ID externo valida o formato ANTES do banco — em **todos** os pontos, não só em alguns |
+| 59 | Cada endpoint **destrutivo/sensível** tem ao menos um teste adversarial **dedicado àquele endpoint** |
 
 ---
 
 ## 🔄 Nota de migração — numeração
 
-> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. Na primeira renumeração (v1.2.0), a numeração foi compactada para sequencial 1-56. Após a auditoria do TrendScope (v1.5.0), shift adicional levou a **sequencial 1-57** com a inserção do item 17 novo (serverless/multi-entrypoint) entre os antigos 16 (SSTI) e 17 (cookies).
+> Antes de 2026-05-18, os itens tinham sufixos (`3B`, `5C`, `9D`, `11B`, `13C`, `17B`, `20B`, `23B`, `39B`, etc.) — esses sufixos eram adicionados ao final de cada auditoria que gerava uma pergunta nova. Na primeira renumeração (v1.2.0), a numeração foi compactada para sequencial 1-56. Após a auditoria do TrendScope (v1.5.0), shift adicional levou a **sequencial 1-57** com a inserção do item 17 novo (serverless/multi-entrypoint) entre os antigos 16 (SSTI) e 17 (cookies). Após a auditoria do Organiza (v1.8.0), o **item 58** (segredos vazando para o bundle do frontend) foi adicionado ao final da seção 🎨 FRONTEND — sem shift, pois entrou como último item. Na sequência, a peer review do mesmo projeto (v1.9.0) trouxe os **itens 59 e 60** ("meta" — consistência de validação de ID em todos os pontos, e teste adversarial dedicado por endpoint sensível) numa banda nova 🧭 META no final do documento — também sem shift. A numeração atual é **sequencial 1-60**.
 >
 > **Relatórios de auditoria publicados antes do shift usam a nomenclatura antiga.** Mapa de equivalência consolidado (sufixo antigo → número atual 1-57):
 >
@@ -359,9 +369,17 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 
 ---
 
-### 15. Requisições HTTP feitas pelo servidor a partir de input do usuário são protegidas contra SSRF?
+### 15. Requisições HTTP feitas pelo servidor a partir de URLs de fonte externa (usuário OU API terceira) são protegidas contra SSRF?
 
 > *Aplica-se a: webhooks configurados pelo usuário, "fetch URL preview", import de arquivo via URL, OAuth callbacks, qualquer feature em que o backend faz `fetch(userInput)`.*
+>
+> ⚠️ **Também aplica-se quando a URL vem de API externa, não diretamente do usuário** (peer review TrendScope 2026-05-18). Exemplos:
+> - **Scraping de resultados de busca:** API Serper/Bing/SerpAPI retorna URLs; servidor faz `fetch(item.link)` pra extrair OG image. Se a API for comprometida (ou um resultado for envenenado por SEO), pode retornar URL apontando pra metadata cloud (`169.254.169.254`) ou IP privado.
+> - **Webhooks de parceiro:** payload do parceiro contém URL; servidor faz fetch dela. Parceiro comprometido = atacante interno via supply chain.
+> - **Feeds RSS / sitemap import:** o feed XML lista URLs que o servidor vai puxar.
+> - **OpenGraph preview de links compartilhados em chat/comentários:** mesmo padrão.
+>
+> A defesa é a **mesma** do SSRF clássico — allowlist de esquemas, blocklist de IPs privados, DNS rebinding guard, redirect:manual. A pergunta-teste muda: "**alguma URL que o servidor fetcha veio de fora do código?** Se sim, está validada antes do fetch?". A maioria dos guias de SSRF foca em `userInput` direto e perde esse vetor.
 >
 > *Ataque clássico em cloud: atacante manda URL `http://169.254.169.254/latest/meta-data/iam/security-credentials/` (AWS metadata) e seu servidor responde com credenciais IAM. Mesma ideia em GCP/Azure.*
 >
@@ -726,7 +744,17 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - Para endpoints públicos: por IP mesmo, mas considerar IP do CDN/proxy
 > - `trust proxy` configurado corretamente para extrair IP real
 >
-> **Opção 2 — Se há rate limit por usuário:** ✅ Excelente
+> ⚠️ **Nuance específica de serverless (peer review TrendScope 2026-05-18):**
+> em Vercel/Lambda/Cloud Run com rate limit **in-memory** (`Map`, objeto local), cada cold start zera o contador. Não é só o problema de "escala horizontal" (várias instâncias com Maps próprios) — é o problema **mais imediato** de "janela de burst pós-cold-start":
+> - Instância dorme após ~5min de inatividade no free tier
+> - Atacante que monitora cold start (ex: ping `/health` periodicamente sem requests reais até instância dormir, depois dispara N requests imediatamente após primeira chamada) consegue burst window
+> - Acontece em deploy **single-instance** também, não só horizontal
+>
+> **Pergunta-teste serverless:** "Se eu derrubar a instância agora, um atacante tem N segundos de burst ilimitado até o próximo cold start estabilizar os contadores?"
+>
+> Quando rate limit in-memory em serverless é aceito como dívida (custo, MVP, demo), **documentar explicitamente em ADR**: "rate limit é best effort, não garantido — janela de burst pós-cold-start é conhecida". Migração para Redis/KV compartilhado é a solução real.
+>
+> **Opção 2 — Se há rate limit por usuário com storage persistente (Redis/KV/banco) OU se a limitação em serverless está documentada como dívida consciente:** ✅ Excelente
 
 ---
 
@@ -1033,6 +1061,104 @@ Ao final, você terá uma lista priorizada de correções. Comece sempre pelos i
 > - Logar detalhes técnicos em monitoring (Sentry), mostrar mensagem genérica + correlation ID ao usuário
 >
 > **Opção 2 — Se erros são tratados com elegância:** ✅ Excelente
+
+---
+
+### 58. Nenhum segredo vaza para o bundle público do frontend (build entregue ao navegador)?
+
+> *Categoria distinta do item 13. O item 13 garante que o segredo não está no **histórico do git**. Este item garante que o segredo não chega ao **navegador do usuário** — são vetores diferentes, e passar no 13 NÃO garante passar no 58.*
+>
+> *O erro mental clássico: "a chave está no `.env`, e o `.env` está no `.gitignore`, logo está segura". Falso. O `.env` protege contra o repositório, não contra o build. Bundlers de frontend (Vite, Next, CRA) **embutem deliberadamente** no JavaScript público qualquer variável com o prefixo de exposição da ferramenta — e esse JS é baixado por qualquer visitante.*
+>
+> **Pergunta-teste:** "Rodo `npm run build`, abro a pasta `dist/` (ou `.next/`, `build/`) e faço `grep` recursivo por trechos de chaves reais (`sk_`, `AKIA`, `-----BEGIN`, o valor do `JWT_SECRET`, a senha do banco). Algum aparece? Abro o site publicado, DevTools → aba Sources → algum segredo está no JS ou nos source maps?"
+>
+> **Vetores a verificar:**
+> - **Prefixo de exposição do bundler** — `VITE_*` (Vite), `NEXT_PUBLIC_*` (Next.js), `REACT_APP_*` (CRA), `PUBLIC_*` (SvelteKit/Astro), `EXPO_PUBLIC_*` (Expo). Tudo com esse prefixo é **público por design**. Só pode conter valores não-sensíveis (URL da API, chave **publishable** do Stripe, project ID do Firebase). Uma `VITE_API_SECRET`, `NEXT_PUBLIC_STRIPE_SECRET_KEY` ou `VITE_OPENAI_KEY` é vazamento — chave de servidor exposta a qualquer visitante.
+> - **Segredo hardcoded em componente/módulo de frontend** — chave colada direto no `.jsx`/`.tsx`/`.vue`. O item 13 pega isso via git; aqui confirma-se que também vai para o bundle.
+> - **Import indevido de código de servidor no cliente** — um módulo `server/` ou `lib/db` importado por engano num componente React arrasta a connection string para o bundle.
+> - **Source maps em produção** — `.map` publicados expõem o código-fonte original (e comentários, e às vezes segredos inline). Em build de produção, desligar: Vite `build.sourcemap: false` (default), Next `productionBrowserSourceMaps: false` (default). Confirmar que não foi religado.
+> - **Chamada a API de terceiro feita direto do browser com chave secreta** — se o frontend chama OpenAI/SendGrid/etc. diretamente, a chave está no cliente. O padrão correto é o frontend chamar o **seu** backend, que guarda a chave server-side.
+>
+> **Opção 1 — Se algum segredo de servidor chega ao bundle público:**
+> - **CRÍTICO — qualquer visitante extrai a chave abrindo o DevTools**
+> - Remover a variável do escopo do bundler: tirar o prefixo de exposição e movê-la para uma env **só de servidor** (sem prefixo), lida apenas no backend
+> - Qualquer chamada que precise da chave secreta passa a ir para um endpoint do próprio backend (proxy), nunca direto do browser ao terceiro
+> - **Rotacionar imediatamente** toda chave que já foi publicada num bundle — ela está comprometida (alguém pode ter baixado o JS)
+> - Desligar source maps de produção, ou hospedá-los em ferramenta de erro privada (Sentry) em vez de servi-los publicamente
+> - Adicionar ao CI um passo que faz `grep` de padrões de segredo no diretório de build e falha se encontrar
+> - 🔗 *Relacionado: item 13 (segredo fora do git) e item 6 (env validada no boot). Os três cobrem o ciclo de vida do segredo: 13 = não está no repositório · 6 = existe quando o servidor sobe · 58 = não escapa para o navegador.*
+>
+> **Opção 2 — Se o bundle só contém valores públicos por design (URLs, chaves publishable) e source maps de produção estão desligados:** ✅ Excelente
+
+---
+
+## 🧭 META — disciplina de cobertura
+
+### 59. Toda função que recebe ID externo (path, body, query) valida o formato ANTES de tocar o banco — em **todos** os pontos, não só em alguns?
+
+> *Esse item é o "olhar lateral" do item 34. O 34 pergunta "schemas têm regex/UUID em vez de `string().min(1)`?". Este aqui pergunta uma coisa diferente: "**eu apliquei essa validação em todos os endpoints**, ou só nos que olhei primeiro?". Padrão de bug: o desenvolvedor corrige um endpoint que viu, esquece os outros da mesma classe — o código review unitário foca no diff e não pega; só auditoria dirigida por classe de bug pega.*
+>
+> *Origem (peer review Organiza 2026-05-22):* a auditoria corrigiu `mongoose.Types.ObjectId.isValid` em `routes/tasks.js` (PUT e DELETE) mas esqueceu o **mesmo padrão** em `routes/auth.js` no `reset-password/:id/:token`. ID malformado virava `CastError` → 500. Não era vulnerabilidade séria — mas era a mesma classe que foi declarada como "resolvida". A correção inconsistente passou batido na 1ª passada da auditoria porque o foco estava em "o achado foi corrigido?" em vez de "o achado foi corrigido **em todos os pontos onde se aplica**?".
+>
+> **Pergunta-teste:** "Eu corrigi a validação de ID em X. Conferi também Y, Z, W — todos os endpoints que recebem `req.params.id`, `req.body.*Id`, `req.query.id`, ou similar?"
+>
+> **Onde aplicar (NoSQL — MongoDB/Mongoose):**
+> - `findById(id)` sem `mongoose.Types.ObjectId.isValid(id)` antes
+> - `findOne({ _id: id })` idem
+> - `findOneAndUpdate({ _id: id }, ...)`, `deleteOne({ _id: id })`, etc.
+>
+> **Onde aplicar (SQL):**
+> - Path/body param tipado como `int`/`uuid` mas usado direto numa query sem coerção
+> - Postgres `WHERE id = $1` com `id` vindo do path como string — bloqueia injeção, mas malformado vira erro do driver
+>
+> **Onde aplicar (geral):**
+> - Toda função que recebe um identificador externo e passa direto para uma camada que faria cast
+>
+> **Opção 1 — Se há endpoints com `findById(id)` (ou equivalente) sem validação prévia em parte dos pontos:**
+> - **Inconsistência de correção** — alguns endpoints validam, outros não. Risco: fingerprinting + UX ruim no não-validado + sinal de descuido para auditor sênior.
+> - Listar **todos** os endpoints que recebem ID externo (`grep -rn 'req\.params\|req\.query\|req\.body\.\w*Id'` ou equivalente)
+> - Para cada um, validar o formato antes da query (`isValid`, regex, `.uuid()`, etc.)
+> - Considerar middleware reutilizável: `validateObjectId('id')` aplicado por rota — reduz a chance de esquecer no próximo endpoint novo
+> - Adicionar **um teste adversarial por endpoint**: ID malformado → 400 (não 500). Sem teste, a próxima correção esquecida volta a passar batido.
+> - 🔗 *Relacionado: item 34 (schema de ID estrito) é a regra geral; item 59 é a meta-pergunta de cobertura. Item 60 (teste adversarial por endpoint) é o irmão deste — também sobre disciplina de cobertura.*
+>
+> **Opção 2 — Se a validação de formato é universal nos endpoints que recebem ID externo:** ✅ Excelente
+
+---
+
+### 60. Cada endpoint **destrutivo ou sensível** tem ao menos um teste adversarial **dedicado àquele endpoint** — não só testes adversariais "em geral"?
+
+> *Esse item é o "olhar por endpoint" do item 19. O 19 pergunta "há testes adversariais cobrindo caminhos críticos?". Este aqui pergunta: "para CADA endpoint que faz operação destrutiva, eu tenho ao menos um teste de ataque específico daquele endpoint, ou minha cobertura é desigual?".*
+>
+> *Padrão de bug clássico: 90% dos testes adversariais ficam em `/login` (cenários genéricos: token inválido, payload errado, brute force), 0% em `/reset-password/:id/:token`, `/change-email/:token`, `/delete-account`, `/admin/promote-user`. Os endpoints com **maior poder de causar dano** são os menos testados — exatamente o oposto do que deveria ser.*
+>
+> *Origem (peer review Organiza 2026-05-22):* depois de adicionar 24 testes adversariais (incluindo `alg:none` rejeitado, IDOR em PUT/DELETE de tasks, anti-enumeração em login e forgot-password), a peer review notou que **zero testes** cobriam o `reset-password/:id/:token` — um endpoint que **troca a senha do usuário** com base em ID + token vindos da URL. A 1ª passada deu por bem coberto porque o endpoint *teoricamente* compartilha mitigações com o resto do `/auth/*`. A 2ª passada (peer) percebeu que "compartilha mitigação" não é o mesmo que "tem teste que prova". A correção exigiu 9 testes novos: caminho feliz, ID malformado, ID inexistente, senha fraca, `alg:none`, token expirado, token assinado sem `+user.password`, cross-id, reuso após troca de senha. Cada um valida uma propriedade de segurança específica daquele endpoint.
+>
+> **Pergunta-teste — listar e contar:**
+> *"Quais são os endpoints destrutivos/sensíveis do meu projeto? (delete, reset password, change email, change role, transfer, payout, refund, disable 2FA, delete account, admin actions). Para cada um, **quantos testes adversariais dedicados** existem? Algum tem zero?"*
+>
+> **O que conta como "dedicado àquele endpoint":**
+> - Teste que monta o cenário de ataque **específico daquele endpoint** (não genérico)
+> - Para `reset-password`: cross-id attack, token de outro usuário, `alg:none`, expirado, reuso depois da troca, senha fraca, ID malformado
+> - Para `delete-account`: usuário tentando deletar conta de outro, sem reautenticação no momento crítico
+> - Para `change-email`: token de mudança de email reutilizado depois de já trocado, redirect para email já cadastrado
+> - Para `admin/promote-user`: não-admin tentando, admin tentando se auto-promover indevidamente, role inválida no body
+>
+> **O que NÃO conta:**
+> - "Teste de login com token inválido" cobrindo só `/login` — não é dedicado ao endpoint sensível.
+> - "Middleware auth bloqueia request sem token" — cobre o middleware, não cada endpoint.
+> - Cobertura genérica via mesma classe de teste replicada — precisa ser **específico** do endpoint.
+>
+> **Opção 1 — Se há endpoints destrutivos/sensíveis sem teste adversarial dedicado:**
+> - Listar os endpoints destrutivos/sensíveis do projeto (não há mais que ~10 numa app típica)
+> - Para cada um, escrever pelo menos:
+>   1. **1 teste de caminho feliz** (regression guard — prova que não quebrei depois)
+>   2. **1 teste de input adversarial** (payload malformado / valor que tenta exceder permissão)
+>   3. **1+ teste de ataque específico** (cross-user, cross-tenant, reuso de token, race condition, replay, etc.)
+> - Para cada propriedade matemática/criptográfica do endpoint (ex: "secret derivado da senha invalida tokens antigos"), escrever um teste que prova essa propriedade — não confiar em "está claro pelo código".
+> - 🔗 *Relacionado: item 19 (testes adversariais em geral) e item 20 (teste por ameaça do THREAT_MODEL). Item 60 é a versão "por endpoint" — corta a mesma cobertura por um eixo diferente para revelar lacunas.*
+>
+> **Opção 2 — Se cada endpoint sensível tem ao menos um teste adversarial específico dele:** ✅ Excelente
 
 ---
 

@@ -168,6 +168,16 @@ Depois de terminar a Passada 1, você vai **se auditar**. Aja como se fosse outr
 
 ## Após entregar a auditoria
 Se o autor (eu) corrigir os bugs, vou pedir auditoria v2 comparativa (padrão FlowSnyker v2 / Lumina v2). **Não corrija nada agora** — a v1 paranoica documenta o estado atual sem alterações.
+
+## Padrão de README pós-auditoria (sugerir quando for atualizar README do projeto)
+Ver seção "📐 Padrão de README pós-auditoria" do `WORKFLOW.md`. Em modo paranoico, a régua é a mesma do padrão:
+
+- **Projeto SEM auth complexa** → 1 seção `🔒 Segurança — camadas e status` com `<a id="seg-camadas">`.
+- **Projeto COM auth complexa** → **2 seções** (`seg-camadas` + `arq-auth`), 6-8 etapas narrativas detalhando o encadeamento contra vetores específicos (XSS/CSRF/IDOR/spoofing/roubo de token).
+
+Modo paranoico adiciona uma regra extra: **na auto-revisão (Fase 5), reler a seção `Arquitetura de Auth`** e perguntar para cada etapa: "essa peça realmente roda em PRODUÇÃO, ou só na config de dev?" (lição TrendScope C2 — `boot.ts` com defesas só rodava em dev; `api/trpc/[...trpc].ts` sem defesas é que servia tráfego).
+
+Sempre **anchors explícitos** (`<a id="...">`).
 ```
 
 ---
